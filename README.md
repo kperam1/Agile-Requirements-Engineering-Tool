@@ -1,1 +1,2 @@
 The Agile Collaboration and Delivery Platform is an integrated environment built to enhance teamwork and transparency across Agile projects. It enables Scrum roles (Product Owner, Scrum Master, and Development Team) to collaboratively manage product backlogs, track sprint progress, and continuously refine deliverables. The platform supports iterative development through tools for sprint planning, daily stand-ups, retrospectives, and release tracking, ensuring alignment with Agile values of adaptability, collaboration, and continuous improvement.
+
