@@ -18,8 +18,7 @@ public class Workspace extends Application {
         sidebar.setPrefWidth(200);
         sidebar.getStyleClass().add("sidebar");
 
-        Label appTitle = new Label("Agile RE Tool");
-        appTitle.getStyleClass().add("app-title");
+
 
         Button dashboardBtn = new Button("Dashboard");
         Button ideationBtn = new Button("Ideation Board");
@@ -28,13 +27,13 @@ public class Workspace extends Application {
         Button reportsBtn = new Button("Reports");
         Button settingsBtn = new Button("Team Settings");
 
-        sidebar.getChildren().addAll(appTitle, dashboardBtn, ideationBtn, backlogBtn, sprintBtn, reportsBtn, settingsBtn);
+        sidebar.getChildren().addAll( dashboardBtn, ideationBtn, backlogBtn, sprintBtn, reportsBtn, settingsBtn);
 
         HBox topBar = new HBox();
         topBar.setPadding(new Insets(10, 20, 10, 20));
         topBar.getStyleClass().add("top-bar");
 
-        Label headerTitle = new Label("Dashboard");
+        Label headerTitle = new Label("Agile RE Tool");
         headerTitle.getStyleClass().add("header-title");
 
         Region spacer = new Region();
