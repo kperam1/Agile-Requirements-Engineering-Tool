@@ -1,0 +1,121 @@
+/* ===== Page & Surface ===== */
+.root {
+    -fx-font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial;
+    -fx-background-color: #F6F7FB;
+    background-color: #F6F7FB;
+    -fx-text-fill: #111827;
+    color: #111827;
+}
+
+/* White rounded dialog/card with soft shadow */
+.modal-surface {
+    -fx-background-color: white;
+    background-color: white;
+    -fx-background-radius: 16;
+    border-radius: 16px;
+    -fx-border-color: #E5E7EB;
+    border-color: #E5E7EB;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(17,24,39,0.08), 24, 0.2, 0, 8);
+    box-shadow: 0 8px 24px rgba(17,24,39,0.08);
+}
+
+/* ===== Typography ===== */
+.h1 {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #111827;
+}
+.subtitle {
+    -fx-text-fill: #6B7280;
+}
+.field-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #374151;
+}
+
+/* alias used in FXML */
+.title-xl {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #111827;
+}
+.muted {
+    -fx-text-fill: #6B7280;
+}
+
+/* ===== Inputs ===== */
+.text-field,
+.text-area,
+.choice-box,
+.combo-box-base {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 12;
+    -fx-padding: 12 14 12 14;
+    -fx-font-size: 13px;
+}
+
+/* TextArea inner region */
+.text-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+}
+
+/* Focus ring: exact blue glow + ring */
+.text-field:focused,
+.text-area:focused,
+.choice-box:focused,
+.combo-box-base:focused {
+    -fx-border-color: #3B82F6;
+    -fx-background-insets: 0;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.45), 10, 0.25, 0, 0);
+}
+
+/* ChoiceBox arrow + label */
+.choice-box > .label,
+.combo-box-base > .text {
+    -fx-text-fill: #111827;
+    -fx-padding: 0 8 0 0;
+}
+.choice-box > .open-button,
+.combo-box-base > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+/* ===== Buttons ===== */
+.button {
+    -fx-background-radius: 12;
+    -fx-font-weight: 600;
+    -fx-padding: 10 18 10 18;
+    -fx-cursor: hand;
+}
+
+/* Primary (Submit Idea) */
+.button.primary, .button:default {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 12 24;
+    -fx-background-radius: 24;
+    -fx-border-color: transparent;
+}
+.button.primary:hover, .button:default:hover { 
+    -fx-background-color: #1D4ED8;
+}
+.button.primary:pressed, .button:default:pressed { 
+    -fx-background-color: #1E40AF; 
+}
+
+/* Outline (Cancel) */
+.btn-outline {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-border-color: #D1D5DB;
+}
+.btn-outline:hover {
+    -fx-background-color: #F3F4F6;
+}
