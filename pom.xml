@@ -71,6 +71,8 @@
 				</configuration>
 			</plugin>
 			<!-- Optional: use Maven Toolchains to select a JDK 21 installation when available on the developer machine -->
+			<!-- Commented out to avoid build failures when toolchain is not configured; uncomment if you have ~/.m2/toolchains.xml -->
+			<!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-toolchains-plugin</artifactId>
@@ -91,6 +93,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 		</plugins>
 	</build>
 
