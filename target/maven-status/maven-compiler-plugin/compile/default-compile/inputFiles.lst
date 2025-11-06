@@ -1,2 +1,10 @@
-/Users/keerthanaperam/Documents/GitHub/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/AgileRequirementsEngineeringToolApplication.java
-/Users/keerthanaperam/Documents/GitHub/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/controller/HomeController.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/api/AuthController.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/controller/LoginControllerApi.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/controller/SignupControllerApi.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/dto/AuthResponse.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/dto/LoginRequest.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/dto/SignupRequest.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/dto/UserDto.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/service/ApiService.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/AgileRequirementsEngineeringToolApplication.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/controller/HomeController.java
