@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agile Requirements Dashboard</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">AR</div>
+        <div>
+          <h1>Agile Requirements Engineering Tool</h1>
+          <p>Visual dashboard — quick overview of ideas & requirements</p>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn">Import</button>
+        <button class="btn">Export</button>
+        <button class="btn primary">Create idea</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Ideas</h3>
+        <div class="metric">128 <small>Total ideas created</small></div>
+      </div>
+      <div class="card">
+        <h3>Open</h3>
+        <div class="metric">23 <small>Ideas needing review</small></div>
+      </div>
+      <div class="card">
+        <h3>Completed</h3>
+        <div class="metric">89 <small>Ideas implemented</small></div>
+      </div>
+    </div>
+
+    <div class="visual">
+      <h3>Activity Overview</h3>
+      <div class="placeholder">[Placeholder for charts (add charting lib or SVG here)]</div>
+
+      <h3 style="margin-top:18px">Recent ideas</h3>
+      <table class="table">
+        <thead>
+          <tr><th>Title</th><th>Owner</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Improve login UX</td><td>Alex</td><td>Open</td></tr>
+          <tr><td>Export CSV</td><td>Sara</td><td>In progress</td></tr>
+          <tr><td>Dark mode</td><td>Jordan</td><td>Done</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
