@@ -41,6 +41,18 @@ public class LoginControllerApi implements Initializable {
     @FXML
     private CheckBox rememberMeCheckBox;
 
+    @FXML
+    private Button googleLoginButton;
+
+    @FXML
+    private Button githubLoginButton;
+
+    @FXML
+    private Button microsoftLoginButton;
+
+    @FXML
+    private Button yahooLoginButton;
+
     @Autowired
     private ApiService apiService;
 
@@ -66,7 +78,7 @@ public class LoginControllerApi implements Initializable {
         }
 
         // Disable button to prevent double submission
-        loginButton.setDisabled(true);
+        loginButton.setDisable(true);
         showInfo("Logging in...");
 
         // Call API in background thread
@@ -83,7 +95,7 @@ public class LoginControllerApi implements Initializable {
 
                 // Update UI on JavaFX thread
                 Platform.runLater(() -> {
-                    loginButton.setDisabled(false);
+                    loginButton.setDisable(false);
                     
                     if (response.isSuccess()) {
                         showSuccess("Welcome back, " + response.getUser().getFirstName() + "!");
@@ -100,7 +112,7 @@ public class LoginControllerApi implements Initializable {
 
             } catch (Exception e) {
                 Platform.runLater(() -> {
-                    loginButton.setDisabled(false);
+                    loginButton.setDisable(false);
                     showError("Failed to connect to server. Please ensure the application is running.");
                 });
             }
@@ -113,6 +125,38 @@ public class LoginControllerApi implements Initializable {
     @FXML
     private void handleSignupLink(ActionEvent event) {
         stageManager.switchScene(FxmlView.SIGNUP);
+    }
+
+    /**
+     * Handle Google login
+     */
+    @FXML
+    private void handleGoogleLogin(ActionEvent event) {
+        showInfo("Google OAuth coming soon...");
+    }
+
+    /**
+     * Handle GitHub login
+     */
+    @FXML
+    private void handleGitHubLogin(ActionEvent event) {
+        showInfo("GitHub OAuth coming soon...");
+    }
+
+    /**
+     * Handle Microsoft login
+     */
+    @FXML
+    private void handleMicrosoftLogin(ActionEvent event) {
+        showInfo("Microsoft OAuth coming soon...");
+    }
+
+    /**
+     * Handle Yahoo login
+     */
+    @FXML
+    private void handleYahooLogin(ActionEvent event) {
+        showInfo("Yahoo OAuth coming soon...");
     }
 
     /**

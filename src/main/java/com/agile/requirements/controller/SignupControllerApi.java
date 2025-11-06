@@ -53,6 +53,18 @@ public class SignupControllerApi implements Initializable {
     @FXML
     private Label messageLabel;
 
+    @FXML
+    private Button googleSignupButton;
+
+    @FXML
+    private Button githubSignupButton;
+
+    @FXML
+    private Button microsoftSignupButton;
+
+    @FXML
+    private Button yahooSignupButton;
+
     @Autowired
     private ApiService apiService;
 
@@ -92,7 +104,7 @@ public class SignupControllerApi implements Initializable {
         }
 
         // Disable button to prevent double submission
-        signupButton.setDisabled(true);
+        signupButton.setDisable(true);
         showInfo("Creating account...");
 
         // Call API in background thread
@@ -112,7 +124,7 @@ public class SignupControllerApi implements Initializable {
 
                 // Update UI on JavaFX thread
                 Platform.runLater(() -> {
-                    signupButton.setDisabled(false);
+                    signupButton.setDisable(false);
                     
                     if (response.isSuccess()) {
                         showSuccess(response.getMessage());
@@ -134,7 +146,7 @@ public class SignupControllerApi implements Initializable {
 
             } catch (Exception e) {
                 Platform.runLater(() -> {
-                    signupButton.setDisabled(false);
+                    signupButton.setDisable(false);
                     showError("Failed to connect to server. Please ensure the application is running.");
                 });
             }
@@ -147,6 +159,44 @@ public class SignupControllerApi implements Initializable {
     @FXML
     private void handleLoginLink(ActionEvent event) {
         stageManager.switchScene(FxmlView.LOGIN);
+    }
+
+    /**
+     * Handle Google signup
+     */
+    @FXML
+    private void handleGoogleSignup(ActionEvent event) {
+        showInfo("Google OAuth integration coming soon...");
+        // TODO: Implement Google OAuth flow
+        // This would typically open a browser for OAuth authentication
+        // and handle the callback to create/login the user
+    }
+
+    /**
+     * Handle GitHub signup
+     */
+    @FXML
+    private void handleGitHubSignup(ActionEvent event) {
+        showInfo("GitHub OAuth integration coming soon...");
+        // TODO: Implement GitHub OAuth flow
+    }
+
+    /**
+     * Handle Microsoft signup
+     */
+    @FXML
+    private void handleMicrosoftSignup(ActionEvent event) {
+        showInfo("Microsoft OAuth integration coming soon...");
+        // TODO: Implement Microsoft OAuth flow
+    }
+
+    /**
+     * Handle Yahoo signup
+     */
+    @FXML
+    private void handleYahooSignup(ActionEvent event) {
+        showInfo("Yahoo OAuth integration coming soon...");
+        // TODO: Implement Yahoo OAuth flow
     }
 
     /**
