@@ -20,9 +20,8 @@ public class UserService {
     
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
-    /**
-     * Register a new user
-     */
+    //Register a new user
+
     public User registerUser(User user) {
         // Encrypt password
         String encryptedPassword = passwordEncoder.encode(user.getPassword());
@@ -33,9 +32,7 @@ public class UserService {
         return userRepository.save(user);
     }
     
-    /**
-     * Authenticate user
-     */
+    //Authenticate user
     public Optional<User> authenticate(String username, String password) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         
@@ -48,31 +45,22 @@ public class UserService {
         
         return Optional.empty();
     }
-    
-    /**
-     * Check if username is available
-     */
+
+    //Check if username is available
     public boolean isUsernameAvailable(String username) {
         return !userRepository.existsByUsername(username);
-    }
-    
-    /**
-     * Check if email is available
-     */
+    }  
+    //Check if email is available
     public boolean isEmailAvailable(String email) {
         return !userRepository.existsByEmail(email);
     }
     
-    /**
-     * Find user by username
-     */
+    //Find user by username
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
-    
-    /**
-     * Find user by email
-     */
+
+    //Find user by email
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }

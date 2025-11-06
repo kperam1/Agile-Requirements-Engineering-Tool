@@ -1,9 +1,4 @@
 package com.agile.requirements.view;
-
-/**
- * FXML View Enum
- * Defines all FXML views in the application
- */
 public enum FxmlView {
     
     SIGNUP {

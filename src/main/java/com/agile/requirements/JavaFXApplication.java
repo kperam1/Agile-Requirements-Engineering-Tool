@@ -7,10 +7,6 @@ import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-/**
- * JavaFX Application Entry Point
- * Integrates JavaFX with Spring Boot
- */
 public class JavaFXApplication extends Application {
     
     private ConfigurableApplicationContext applicationContext;

@@ -10,11 +10,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-
-/**
- * Stage Manager
- * Manages JavaFX stage and scene switching
- */
 @Component
 public class StageManager {
     
@@ -29,13 +24,20 @@ public class StageManager {
         this.primaryStage = primaryStage;
     }
     
-    /**
-     * Switch to a different scene
-     */
     public void switchScene(FxmlView view) {
         try {
             Parent root = loadView(view.getFxmlFile());
             Scene scene = new Scene(root, view.getWidth(), view.getHeight());
+            // Attach centralized auth stylesheet if available
+            try {
+                java.net.URL css = getClass().getResource("/css/auth.css");
+                if (css != null) {
+                    scene.getStylesheets().add(css.toExternalForm());
+                }
+            } catch (Exception ex) {
+                // If loading stylesheet fails, continue without it
+                ex.printStackTrace();
+            }
             primaryStage.setScene(scene);
             primaryStage.setTitle(view.getTitle());
             primaryStage.show();
@@ -44,9 +46,6 @@ public class StageManager {
         }
     }
     
-    /**
-     * Load FXML view
-     */
     private Parent loadView(String fxmlFile) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
         loader.setControllerFactory(applicationContext::getBean);

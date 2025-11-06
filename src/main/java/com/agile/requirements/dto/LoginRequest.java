@@ -1,9 +1,4 @@
 package com.agile.requirements.dto;
-
-/**
- * Login Request DTO
- * Data Transfer Object for login requests
- */
 public class LoginRequest {
     private String username;
     private String password;

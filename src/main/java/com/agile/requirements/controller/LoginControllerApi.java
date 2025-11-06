@@ -64,9 +64,7 @@ public class LoginControllerApi implements Initializable {
         // Any initialization logic can go here
     }
 
-    /**
-     * Handle login button action
-     */
+    // Handle login button action
     @FXML
     private void handleLogin(ActionEvent event) {
         // Clear previous messages
@@ -100,7 +98,6 @@ public class LoginControllerApi implements Initializable {
                     if (response.isSuccess()) {
                         showSuccess("Welcome back, " + response.getUser().getFirstName() + "!");
                         
-                        // TODO: Navigate to main dashboard
                         // stageManager.switchScene(FxmlView.DASHBOARD);
                         
                     } else {
@@ -119,49 +116,37 @@ public class LoginControllerApi implements Initializable {
         }).start();
     }
 
-    /**
-     * Handle signup link action
-     */
+    // Handle signup link action
     @FXML
     private void handleSignupLink(ActionEvent event) {
         stageManager.switchScene(FxmlView.SIGNUP);
     }
 
-    /**
-     * Handle Google login
-     */
+    // Handle Google login
     @FXML
     private void handleGoogleLogin(ActionEvent event) {
         showInfo("Google OAuth coming soon...");
     }
 
-    /**
-     * Handle GitHub login
-     */
+    // Handle GitHub login
     @FXML
     private void handleGitHubLogin(ActionEvent event) {
         showInfo("GitHub OAuth coming soon...");
     }
 
-    /**
-     * Handle Microsoft login
-     */
+    // Handle Microsoft login
     @FXML
     private void handleMicrosoftLogin(ActionEvent event) {
         showInfo("Microsoft OAuth coming soon...");
     }
 
-    /**
-     * Handle Yahoo login
-     */
+    // Handle Yahoo login
     @FXML
     private void handleYahooLogin(ActionEvent event) {
         showInfo("Yahoo OAuth coming soon...");
     }
 
-    /**
-     * Validate all input fields
-     */
+    // Validate all input fields
     private boolean validateInputs() {
         if (usernameField.getText().trim().isEmpty()) {
             showError("Username is required!");
@@ -178,25 +163,20 @@ public class LoginControllerApi implements Initializable {
         return true;
     }
 
-    /**
-     * Show error message
-     */
+    //Show error message
+     
     private void showError(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #d32f2f;");
     }
 
-    /**
-     * Show success message
-     */
+    //Show success message
     private void showSuccess(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #388e3c;");
     }
 
-    /**
-     * Show info message
-     */
+    //Show info message
     private void showInfo(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #1976d2;");

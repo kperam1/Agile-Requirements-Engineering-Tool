@@ -11,11 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
-
-/**
- * REST API Controller for Authentication
- * Handles login and signup endpoints
- */
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
@@ -24,10 +19,6 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    /**
-     * POST /api/auth/signup
-     * Register a new user
-     */
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
         try {
@@ -74,10 +65,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * POST /api/auth/login
-     * Authenticate a user
-     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         try {
@@ -121,11 +108,6 @@ public class AuthController {
                     .body(new AuthResponse(false, "An error occurred during login", null));
         }
     }
-
-    /**
-     * GET /api/auth/check-username/{username}
-     * Check if username is available
-     */
     @GetMapping("/check-username/{username}")
     public ResponseEntity<AuthResponse> checkUsername(@PathVariable String username) {
         boolean exists = userService.findByUsername(username).isPresent();
@@ -138,10 +120,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * GET /api/auth/check-email/{email}
-     * Check if email is available
-     */
     @GetMapping("/check-email/{email}")
     public ResponseEntity<AuthResponse> checkEmail(@PathVariable String email) {
         boolean exists = userService.findByEmail(email).isPresent();
@@ -153,10 +131,6 @@ public class AuthController {
                     .body(new AuthResponse(true, "Email available", null));
         }
     }
-
-    /**
-     * Convert User entity to UserDto
-     */
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());

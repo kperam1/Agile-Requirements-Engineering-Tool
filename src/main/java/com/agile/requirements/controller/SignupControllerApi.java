@@ -84,9 +84,7 @@ public class SignupControllerApi implements Initializable {
         roleComboBox.getSelectionModel().selectFirst();
     }
 
-    /**
-     * Handle signup button action
-     */
+    //Handle signup button action
     @FXML
     private void handleSignup(ActionEvent event) {
         // Clear previous messages
@@ -153,55 +151,39 @@ public class SignupControllerApi implements Initializable {
         }).start();
     }
 
-    /**
-     * Handle login link action
-     */
+    //Handle login link action
     @FXML
     private void handleLoginLink(ActionEvent event) {
         stageManager.switchScene(FxmlView.LOGIN);
     }
 
-    /**
-     * Handle Google signup
-     */
+    //Handle Google signup
     @FXML
     private void handleGoogleSignup(ActionEvent event) {
         showInfo("Google OAuth integration coming soon...");
-        // TODO: Implement Google OAuth flow
         // This would typically open a browser for OAuth authentication
         // and handle the callback to create/login the user
     }
 
-    /**
-     * Handle GitHub signup
-     */
+    //Handle GitHub signup
     @FXML
     private void handleGitHubSignup(ActionEvent event) {
         showInfo("GitHub OAuth integration coming soon...");
-        // TODO: Implement GitHub OAuth flow
     }
 
-    /**
-     * Handle Microsoft signup
-     */
+    //Handle Microsoft signup
     @FXML
     private void handleMicrosoftSignup(ActionEvent event) {
         showInfo("Microsoft OAuth integration coming soon...");
-        // TODO: Implement Microsoft OAuth flow
     }
 
-    /**
-     * Handle Yahoo signup
-     */
+    //Handle Yahoo signup
     @FXML
     private void handleYahooSignup(ActionEvent event) {
         showInfo("Yahoo OAuth integration coming soon...");
-        // TODO: Implement Yahoo OAuth flow
     }
 
-    /**
-     * Validate all input fields
-     */
+    //Validate all input fields
     private boolean validateInputs() {
         if (firstNameField.getText().trim().isEmpty()) {
             showError("First name is required!");
@@ -260,41 +242,31 @@ public class SignupControllerApi implements Initializable {
         return true;
     }
 
-    /**
-     * Validate email format
-     */
+    //Validate email format
     private boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
         return email.matches(emailRegex);
     }
 
-    /**
-     * Show error message
-     */
+    //Show error message
     private void showError(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #d32f2f;");
     }
 
-    /**
-     * Show success message
-     */
+    //Show success message
     private void showSuccess(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #388e3c;");
     }
 
-    /**
-     * Show info message
-     */
+    //Show info message
     private void showInfo(String message) {
         messageLabel.setText(message);
         messageLabel.setStyle("-fx-text-fill: #1976d2;");
     }
 
-    /**
-     * Clear all form fields
-     */
+    //Clear all form fields
     private void clearForm() {
         firstNameField.clear();
         lastNameField.clear();
