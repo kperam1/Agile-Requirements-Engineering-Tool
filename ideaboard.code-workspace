@@ -1,0 +1,38 @@
+{
+  "folders": [
+    {
+      "name": "Frontend (JavaFX)",
+      "path": "."
+    },
+    {
+      "name": "Backend (Spring Boot)",
+      "path": "backend"
+    }
+  ],
+  "settings": {
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "spring-boot.ls.checkJVM": false,
+    "files.exclude": {
+      "**/target": true,
+      "**/.mvn": true
+    },
+    "java.project.sourcePaths": [
+      "src/main/java",
+      "backend/src/main/java"
+    ],
+    "java.project.referencedLibraries": [
+      "lib/**/*.jar"
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "vscjava.vscode-java-pack",
+      "vmware.vscode-spring-boot",
+      "vscjava.vscode-spring-initializr",
+      "vscjava.vscode-spring-boot-dashboard",
+      "cweijan.vscode-mysql-client2",
+      "humao.rest-client"
+    ]
+  }
+}
