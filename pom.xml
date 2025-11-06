@@ -18,7 +18,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>${spring.boot.version}</version>
+		<!-- Parent POM versions must be literal values (properties are not resolved for parent during initial model processing). -->
+		<version>3.4.11</version>
 		<relativePath/>
 	</parent>
 
