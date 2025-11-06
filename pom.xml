@@ -70,6 +70,27 @@
 					<release>21</release>
 				</configuration>
 			</plugin>
+			<!-- Optional: use Maven Toolchains to select a JDK 21 installation when available on the developer machine -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-toolchains-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<toolchains>
+						<jdk>
+							<version>21</version>
+							<vendor>eclipse</vendor>
+						</jdk>
+					</toolchains>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>toolchain</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
