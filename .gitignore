@@ -1,2 +1,5 @@
 ﻿
 .vscode/
+target/
+FirstJavaApp/target/
+.DS_Store
