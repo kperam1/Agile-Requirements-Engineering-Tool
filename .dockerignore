@@ -1,0 +1,13 @@
+# Docker ignore - exclude unnecessary files from Docker build context
+target/
+.git/
+.github/
+.vscode/
+.DS_Store
+*.md
+!README.md
+.gitignore
+FirstJavaApp/
+backend/
+HELP.md
+UPGRADE-JAVA21.md
