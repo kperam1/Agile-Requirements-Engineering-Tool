@@ -1,24 +1,35 @@
 package com.example.agile_re_tool.ui;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 
 public class DashboardView {
+
+    private final StringProperty totalIdeas = new SimpleStringProperty("42");
+    private final StringProperty userStories = new SimpleStringProperty("28");
+    private final StringProperty sprintReady = new SimpleStringProperty("15");
+    private final StringProperty teamVelocity = new SimpleStringProperty("32");
 
     public BorderPane getView() {
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(20));
+        pane.getStyleClass().add("dashboard-root");
+
+        pane.getStylesheets().add(
+            getClass().getResource("/styles/dashboard.css").toExternalForm()
+        );
 
         HBox summaryBox = new HBox(20);
         summaryBox.setAlignment(Pos.CENTER_LEFT);
         summaryBox.getChildren().addAll(
-                createCard("Total Ideas", "42", "+12% from last month", "#e8f0fe"),
-                createCard("User Stories", "28", "+8% from last month", "#e8f0fe"),
-                createCard("Sprint Ready", "15", "Ready for development", "#fff4e5"),
-                createCard("Team Velocity", "32", "Points per sprint", "#e7f7f0")
+                createInfoCard("Total Ideas", totalIdeas, "+12% from last month", "card-blue"),
+                createInfoCard("User Stories", userStories, "+8% from last month", "card-blue"),
+                createInfoCard("Sprint Ready", sprintReady, "Ready for development", "card-yellow"),
+                createInfoCard("Team Velocity", teamVelocity, "Points per sprint", "card-green")
         );
         pane.setTop(summaryBox);
 
@@ -37,21 +48,22 @@ public class DashboardView {
         return pane;
     }
 
-    private VBox createCard(String title, String mainValue, String subtitle, String color) {
+    private VBox createInfoCard(String title, StringProperty mainValue, String subtitle, String colorClass) {
         VBox card = new VBox(5);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(15));
         card.setPrefWidth(200);
-        card.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 8;");
+        card.getStyleClass().addAll("card", colorClass);
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        titleLabel.getStyleClass().add("card-title");
 
-        Label mainLabel = new Label(mainValue);
-        mainLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        Label mainLabel = new Label();
+        mainLabel.textProperty().bind(mainValue);
+        mainLabel.getStyleClass().add("card-main");
 
         Label subLabel = new Label(subtitle);
-        subLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: gray;");
+        subLabel.getStyleClass().add("card-sub");
 
         card.getChildren().addAll(titleLabel, mainLabel, subLabel);
         return card;
@@ -62,7 +74,7 @@ public class DashboardView {
         section.setPrefWidth(600);
 
         Label title = new Label("Recent Ideas");
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        title.getStyleClass().add("section-title");
 
         VBox ideasList = new VBox(10);
         ideasList.getChildren().addAll(
@@ -78,16 +90,18 @@ public class DashboardView {
     private HBox createIdeaItem(String title, String desc, String status) {
         HBox idea = new HBox(10);
         idea.setPadding(new Insets(10));
-        idea.setStyle("-fx-background-color: #f9f9f9; -fx-background-radius: 8;");
+        idea.getStyleClass().add("idea-item");
         idea.setAlignment(Pos.CENTER_LEFT);
 
         VBox text = new VBox(5);
         Label ideaTitle = new Label(title);
-        ideaTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        ideaTitle.getStyleClass().add("idea-title");
+
         Label ideaDesc = new Label(desc);
-        ideaDesc.setStyle("-fx-text-fill: #555;");
+        ideaDesc.getStyleClass().add("idea-desc");
+
         Label ideaStatus = new Label(status);
-        ideaStatus.setStyle("-fx-background-color: #e0f7e9; -fx-padding: 2 8; -fx-background-radius: 6;");
+        ideaStatus.getStyleClass().add("idea-status");
 
         text.getChildren().addAll(ideaTitle, ideaDesc, ideaStatus);
         idea.getChildren().add(text);
@@ -98,13 +112,13 @@ public class DashboardView {
         VBox sprintBox = new VBox(10);
         sprintBox.setPadding(new Insets(10));
         sprintBox.setPrefWidth(300);
-        sprintBox.setStyle("-fx-background-color: #f6f8ff; -fx-background-radius: 10;");
+        sprintBox.getStyleClass().add("sprint-box");
 
         Label title = new Label("Current Sprint");
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        title.getStyleClass().add("section-title");
 
         Label sprintName = new Label("Sprint 24 - Active");
-        sprintName.setStyle("-fx-text-fill: #3f51b5; -fx-font-weight: bold;");
+        sprintName.getStyleClass().add("sprint-name");
 
         ProgressBar progress = new ProgressBar(0.65);
         progress.setPrefWidth(250);
@@ -121,39 +135,37 @@ public class DashboardView {
         return sprintBox;
     }
 
-private HBox createQuickActions() {
-    HBox box = new HBox(20);
-    box.setPadding(new Insets(20, 0, 0, 0));
-    box.setAlignment(Pos.CENTER);
+    private HBox createQuickActions() {
+        HBox box = new HBox(20);
+        box.setPadding(new Insets(20, 0, 0, 0));
+        box.setAlignment(Pos.CENTER);
 
-    VBox ideaCard = createActionCard(" Create Idea", "Share your innovative ideas with the team", "#e8f0fe");
-    VBox storyCard = createActionCard(" Create User Story", "Convert ideas into actionable stories", "#e8f0fe");
-    VBox backlogCard = createActionCard(" Prioritize Backlog", "Reorder stories by business value", "#fff4e5");
-    VBox reportCard = createActionCard(" Generate Reports", "View velocity and burndown charts", "#e7f7f0");
+        VBox ideaCard = createActionCard("Create Idea", "Share your innovative ideas with the team", "card-blue");
+        VBox storyCard = createActionCard("Create User Story", "Convert ideas into actionable stories", "card-blue");
+        VBox backlogCard = createActionCard("Prioritize Backlog", "Reorder stories by business value", "card-yellow");
+        VBox reportCard = createActionCard("Generate Reports", "View velocity and burndown charts", "card-green");
 
-    box.getChildren().addAll(ideaCard, storyCard, backlogCard, reportCard);
-    return box;
-}
+        box.getChildren().addAll(ideaCard, storyCard, backlogCard, reportCard);
+        return box;
+    }
 
-private VBox createActionCard(String title, String subtitle, String color) {
-    VBox card = new VBox(5);
-    card.setAlignment(Pos.CENTER_LEFT);
-    card.setPadding(new Insets(15));
-    card.setPrefWidth(220);
-    card.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 10; -fx-cursor: hand;");
-    
-    card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: derive(" + color + ", 20%); -fx-background-radius: 10; -fx-cursor: hand;"));
-    card.setOnMouseExited(e -> card.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 10; -fx-cursor: hand;"));
+    private VBox createActionCard(String title, String subtitle, String colorClass) {
+        VBox card = new VBox(5);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(15));
+        card.setPrefWidth(220);
+        card.getStyleClass().addAll("action-card", colorClass);
 
-    Label titleLabel = new Label(title);
-    titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-    Label subLabel = new Label(subtitle);
-    subLabel.setStyle("-fx-text-fill: #555;");
+        Label titleLabel = new Label(title);
+        titleLabel.getStyleClass().add("action-title");
 
-    card.getChildren().addAll(titleLabel, subLabel);
-    return card;
-}
+        Label subLabel = new Label(subtitle);
+        subLabel.getStyleClass().add("action-sub");
 
-    
+        card.setOnMouseEntered(e -> card.setStyle("-fx-opacity: 0.9;"));
+        card.setOnMouseExited(e -> card.setStyle("-fx-opacity: 1;"));
 
+        card.getChildren().addAll(titleLabel, subLabel);
+        return card;
+    }
 }
