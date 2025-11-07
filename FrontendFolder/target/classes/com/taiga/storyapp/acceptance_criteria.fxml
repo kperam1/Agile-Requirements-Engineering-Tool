@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!-- One-row form: label at left, input at right -->
+<GridPane xmlns="http://javafx.com/javafx/21.0.3"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="com.taiga.storyapp.AcceptanceCriteriaController"
+          hgap="24" vgap="12">
+
+    <!-- Left column: field label -->
+    <Label text="Acceptance Criteria" GridPane.rowIndex="0" GridPane.columnIndex="0"
+           style="-fx-font-weight: 600; -fx-text-fill: #3a3a3a;" />
+
+    <!-- Right column: rounded, subtle TextArea like the Figma -->
+    <VBox spacing="6" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+        <TextArea fx:id="criteriaArea" prefRowCount="5" wrapText="true"
+                  promptText="Enter acceptance criteria (e.g., Given… When… Then…)"
+                  style="
+                    -fx-background-color: transparent;
+                    -fx-control-inner-background: #f7f9fc;
+                    -fx-background-insets: 0;
+                    -fx-background-radius: 12;
+                    -fx-padding: 12;
+                    -fx-border-color: #e7eef5;
+                    -fx-border-radius: 12;
+                  "/>
+        <HBox spacing="8">
+            <Label fx:id="helperLabel" text="Tip: Use Given / When / Then." style="-fx-text-fill:#6b7280;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="charCount" text="0 / 1000" style="-fx-text-fill:#9ca3af;"/>
+        </HBox>
+    </VBox>
+
+    <columnConstraints>
+        <ColumnConstraints prefWidth="180" halignment="RIGHT" />
+        <ColumnConstraints hgrow="ALWAYS" />
+    </columnConstraints>
+</GridPane>

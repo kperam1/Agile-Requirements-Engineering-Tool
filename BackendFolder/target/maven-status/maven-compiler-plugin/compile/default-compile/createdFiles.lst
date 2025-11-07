@@ -1,0 +1,9 @@
+com/taiga/storyservice/story/StoryService.class
+com/taiga/storyservice/story/dto/StoryRequest.class
+com/taiga/storyservice/story/StoryController.class
+com/taiga/storyservice/StoryServiceApplication.class
+com/taiga/storyservice/story/dto/StoryResponse.class
+com/taiga/storyservice/health/HealthController.class
+com/taiga/storyservice/story/dto/AcceptanceCriteriaUpdateRequest.class
+com/taiga/storyservice/story/Story.class
+com/taiga/storyservice/story/StoryRepository.class

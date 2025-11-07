@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21.0.3"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.taiga.storyapp.FormController"
+            style="-fx-background-color: white;">
+
+    <!-- Header -->
+    <top>
+        <VBox spacing="4" style="-fx-padding: 16 20 8 20;">
+            <Label text="Add New Story" style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label text="Create a new story for the selected idea. Fill in the details below."
+                   style="-fx-text-fill: #6b7280;"/>
+        </VBox>
+    </top>
+
+    <!-- Form filling the screen -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    style="-fx-background-color: transparent;">
+            <content>
+                <GridPane hgap="16" vgap="14" style="-fx-padding: 8 20 20 20;">
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="160" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                    <!-- Task Title -->
+                    <Label text="Task Title *" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <TextField promptText="Task title" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                               style="-fx-background-radius:12; -fx-control-inner-background:#f7f9fc; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:10;"/>
+
+                    <!-- Description -->
+                    <Label text="Description" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                    <TextArea prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                              style="-fx-background-radius:12; -fx-control-inner-background:#f7f9fc; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:10;"
+                              promptText="Enter task description"/>
+
+                    <!-- Acceptance Criteria (your field) -->
+                    <Label text="Acceptance Criteria" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                    <VBox spacing="6" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                        <TextArea fx:id="criteriaArea" prefRowCount="5" wrapText="true"
+                                  promptText="Enter acceptance criteria (e.g., Given… When… Then…)"
+                                  style="-fx-background-radius:12; -fx-control-inner-background:#f7f9fc; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:12;"/>
+                        <HBox spacing="8">
+                            <Label fx:id="helperLabel" text="Tip: Use Given / When / Then." style="-fx-text-fill:#6b7280;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="charCount" text="0 / 1000" style="-fx-text-fill:#9ca3af;"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Assignee dropdown -->
+                    <Label text="Assignee" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="assigneeCb" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                              style="-fx-background-radius:12; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:4;"/>
+
+                    <!-- Estimate / Story Points spinner -->
+                    <Label text="Estimate" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                    <HBox spacing="10" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                        <Label text="Story Points:" style="-fx-text-fill:#6b7280;"/>
+                        <Spinner fx:id="storyPointsSp" prefWidth="80"
+                                 style="-fx-background-radius:12; -fx-border-color:#e7eef5; -fx-border-radius:12;"/>
+                    </HBox>
+
+                    <!-- Priority dropdown -->
+                    <Label text="Priority" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="priorityCb" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                              style="-fx-background-radius:12; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:4;"/>
+
+                    <!-- Status dropdown -->
+                    <Label text="Status" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="statusCb" GridPane.rowIndex="6" GridPane.columnIndex="1"
+                              style="-fx-background-radius:12; -fx-border-color:#e7eef5; -fx-border-radius:12; -fx-padding:4;"/>
+
+                    <!-- Footer buttons -->
+                    <HBox spacing="10" GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.halignment="RIGHT"
+                          style="-fx-padding:6 0 0 0;">
+                        <Button text="Cancel" onAction="#onCancel"
+                                style="-fx-background-radius:12; -fx-padding:8 14;"/>
+                        <Button text="Add Task" fx:id="saveBtn" onAction="#onSave"
+                                style="-fx-background-radius:12; -fx-padding:8 14; -fx-background-color:#0ea5e9; -fx-text-fill:white;"
+                                disable="true"/>
+                    </HBox>
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
