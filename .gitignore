@@ -1,49 +1,6 @@
-# Maven
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
-
-# IntelliJ IDEA
-.idea/
-*.iws
-*.iml
-*.ipr
-
-# VS Code
-.vscode/
-.settings/
-.project
-.classpath
-
-# Eclipse
-*.pydevproject
-.metadata
-.gradle
-bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.loadpath
-
-# Database
-*.db
-*.sqlite
-*.log
-
-# Application specific
-application-local.properties
-application-dev.properties
-
-# OS specific
+*.class
 .DS_Store
-Thumbs.db
+.idea/
+.vscode/
+*.log

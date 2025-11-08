@@ -4,9 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-/**
- * Controller for the Create New Idea modal form.
- */
 public class CreateIdeaController {
 
     @FXML
@@ -24,13 +21,8 @@ public class CreateIdeaController {
     @FXML
     private TextField ownerNameField;
 
-    /**
-     * Initializes the controller class.
-     * Sets up default values for dropdowns.
-     */
     @FXML
     public void initialize() {
-        // Populate Category choices
         categoryChoice.getItems().addAll(
             "Product Enhancement",
             "New Feature",
@@ -41,7 +33,6 @@ public class CreateIdeaController {
         );
         categoryChoice.setValue("Product Enhancement"); // Default value
 
-        // Populate Status choices
         statusChoice.getItems().addAll(
             "New",
             "Under Review",
@@ -53,13 +44,8 @@ public class CreateIdeaController {
         statusChoice.setValue("New"); // Default value
     }
 
-    /**
-     * Handles the Create Idea button action.
-     * Validates input and sends POST request to backend API.
-     */
     @FXML
     private void createIdea() {
-        // Validate required fields
         String title = titleField.getText().trim();
         String owner = ownerNameField.getText().trim();
         
@@ -69,12 +55,10 @@ public class CreateIdeaController {
             return;
         }
 
-        // Get form values
         String category = categoryChoice.getValue();
         String description = descriptionArea.getText().trim();
         String status = statusChoice.getValue();
 
-        // Send POST request to backend API
         try {
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             
@@ -130,9 +114,6 @@ public class CreateIdeaController {
         }
     }
     
-    /**
-     * Escapes special characters in JSON strings.
-     */
     private String escapeJson(String value) {
         if (value == null) return "";
         return value.replace("\\", "\\\\")
@@ -142,19 +123,12 @@ public class CreateIdeaController {
                     .replace("\t", "\\t");
     }
 
-    /**
-     * Handles the Cancel button action.
-     * Clears fields and closes the window.
-     */
     @FXML
     private void cancel() {
         clearFields();
         closeWindow();
     }
 
-    /**
-     * Clears all form fields to their default state.
-     */
     private void clearFields() {
         titleField.clear();
         categoryChoice.setValue("Product Enhancement");
@@ -163,17 +137,11 @@ public class CreateIdeaController {
         ownerNameField.clear();
     }
 
-    /**
-     * Closes the modal window if it's in a dialog or stage.
-     */
     private void closeWindow() {
         Stage stage = (Stage) titleField.getScene().getWindow();
         stage.close();
     }
 
-    /**
-     * Shows an error alert dialog.
-     */
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -182,9 +150,6 @@ public class CreateIdeaController {
         alert.showAndWait();
     }
 
-    /**
-     * Shows a success alert dialog.
-     */
     private void showSuccess(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
