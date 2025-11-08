@@ -1,0 +1,41 @@
+### Test Get All Ideas
+GET http://localhost:8080/api/ideas
+
+### Test Get Idea by ID
+GET http://localhost:8080/api/ideas/1
+
+### Test Create Idea
+POST http://localhost:8080/api/ideas
+Content-Type: application/json
+
+{
+  "title": "Implement Real-time Notifications",
+  "category": "New Feature",
+  "description": "Add WebSocket support for real-time push notifications to users",
+  "status": "New",
+  "ownerName": "Emily Chen"
+}
+
+### Test Update Idea
+PUT http://localhost:8080/api/ideas/1
+Content-Type: application/json
+
+{
+  "title": "Implement Dark Mode (Updated)",
+  "category": "Product Enhancement",
+  "description": "Add dark mode with automatic theme switching based on system preferences",
+  "status": "In Progress",
+  "ownerName": "John Doe"
+}
+
+### Test Delete Idea
+DELETE http://localhost:8080/api/ideas/5
+
+### Test Get Ideas by Category
+GET http://localhost:8080/api/ideas/category/New Feature
+
+### Test Get Ideas by Status
+GET http://localhost:8080/api/ideas/status/New
+
+### Test Search Ideas
+GET http://localhost:8080/api/ideas/search?keyword=dark
