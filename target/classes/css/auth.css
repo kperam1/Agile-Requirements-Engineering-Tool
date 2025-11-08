@@ -1,5 +1,7 @@
+/* Centralized styles for auth views (login/signup) */
 
 .social-button {
+	/* Standard CSS fallbacks for editors/tools */
 	background-color: white;
 	border-color: #e0e0e0;
 	border-width: 1px;
@@ -10,6 +12,9 @@
 	max-width: 50px;
 	max-height: 50px;
 	padding: 0;
+
+	/* JavaFX-specific properties (kept for actual rendering)
+	   JavaFX uses the -fx- prefixed properties for control styling. */
 	-fx-background-color: white;
 	-fx-border-color: #e0e0e0;
 	-fx-border-width: 1px;
@@ -24,9 +29,11 @@
 }
 
 .social-button:hover {
+	/* JavaFX-only drop shadow effect */
 	-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.12), 6, 0.0, 0, 2);
 }
 
+/* Make ImageView within buttons centered */
 .social-button > .graphic {
 	-fx-alignment: center;
 }
