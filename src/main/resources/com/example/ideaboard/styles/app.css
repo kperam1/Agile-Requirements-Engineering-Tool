@@ -1,10 +1,16 @@
+/* ============================================
+   Global Styles
+   ============================================ */
+
 .root {
     -fx-font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
     -fx-background-color: #F6F7FB;
     -fx-text-fill: #111827;
 }
 
-
+/* ============================================
+   Modal Surface
+   ============================================ */
 
 .modal-surface {
     -fx-background-color: white;
@@ -16,7 +22,9 @@
     -fx-effect: dropshadow(gaussian, rgba(17, 24, 39, 0.08), 24, 0.2, 0, 8);
 }
 
-
+/* ============================================
+   Typography
+   ============================================ */
 
 .h1 {
     -fx-font-size: 20px;
@@ -35,6 +43,9 @@
     -fx-text-fill: #374151;
 }
 
+/* ============================================
+   Input Controls (TextField, TextArea, ChoiceBox)
+   ============================================ */
 
 .text-field,
 .text-area,
@@ -55,7 +66,7 @@
     -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.45), 10, 0.25, 0, 0);
 }
 
-
+/* TextArea specific styles */
 .text-area .content {
     -fx-background-color: white;
     -fx-background-radius: 12;
@@ -69,12 +80,12 @@
     -fx-background-color: transparent;
 }
 
-
+/* ChoiceBox specific styles */
 .choice-box > .label {
     -fx-padding: 0 0 0 0;
 }
 
-
+/* ComboBox styles (for consistency) */
 .combo-box {
     -fx-background-color: white;
     -fx-background-radius: 12;
@@ -89,7 +100,9 @@
     -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.45), 10, 0.25, 0, 0);
 }
 
-
+/* ============================================
+   Buttons
+   ============================================ */
 
 .button {
     -fx-background-radius: 12;
@@ -100,7 +113,7 @@
     -fx-border-width: 1;
 }
 
-
+/* Default/Primary Button */
 .button:default {
     -fx-background-color: #2563EB;
     -fx-text-fill: white;
@@ -115,7 +128,7 @@
     -fx-background-color: #1E4FD1;
 }
 
-
+/* Outline Button */
 .btn-outline {
     -fx-background-color: white;
     -fx-text-fill: #374151;
@@ -131,7 +144,9 @@
     -fx-background-color: #E5E7EB;
 }
 
-
+/* ============================================
+   Spacing Helpers
+   ============================================ */
 
 VBox {
     -fx-spacing: 24;
@@ -146,7 +161,9 @@ VBox {
     -fx-hgap: 0;
 }
 
-
+/* ============================================
+   Dialog Pane Customization
+   ============================================ */
 
 .dialog-pane {
     -fx-background-color: transparent;

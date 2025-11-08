@@ -8,49 +8,51 @@
       fx:controller="com.example.ideaboard.controllers.CreateIdeaController"
       styleClass="modal-surface" spacing="24" maxWidth="600" minWidth="600">
     
-    
+    <!-- Header Section -->
     <VBox spacing="4">
         <Label text="Create New Idea" styleClass="h1"/>
         <Label text="Submit a new idea to the ideation board." styleClass="subtitle"/>
     </VBox>
     
-
+    <!-- Form Section -->
     <GridPane styleClass="stack-gap">
         <columnConstraints>
             <ColumnConstraints hgrow="ALWAYS"/>
         </columnConstraints>
         
-      
+        <!-- Title Field -->
         <VBox spacing="8" styleClass="form-group" GridPane.rowIndex="0">
             <Label text="Title" styleClass="field-label"/>
             <TextField fx:id="titleField" promptText="Enter idea title"/>
         </VBox>
-     
+        
+        <!-- Category Field -->
         <VBox spacing="8" styleClass="form-group" GridPane.rowIndex="1">
             <Label text="Category" styleClass="field-label"/>
             <ChoiceBox fx:id="categoryChoice" maxWidth="Infinity"/>
         </VBox>
         
-       
+        <!-- Description Field -->
         <VBox spacing="8" styleClass="form-group" GridPane.rowIndex="2">
             <Label text="Description" styleClass="field-label"/>
             <TextArea fx:id="descriptionArea" promptText="Describe your idea in detail" 
                       wrapText="true" prefRowCount="4"/>
         </VBox>
         
-      
+        <!-- Status Field -->
         <VBox spacing="8" styleClass="form-group" GridPane.rowIndex="3">
             <Label text="Status" styleClass="field-label"/>
             <ChoiceBox fx:id="statusChoice" maxWidth="Infinity"/>
         </VBox>
-    
+        
+        <!-- Owner Name Field -->
         <VBox spacing="8" styleClass="form-group" GridPane.rowIndex="4">
             <Label text="Owner Name" styleClass="field-label"/>
             <TextField fx:id="ownerNameField" promptText="Owner name"/>
         </VBox>
     </GridPane>
     
-    
+    <!-- Actions Section -->
     <HBox spacing="12" alignment="CENTER_RIGHT">
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Cancel" styleClass="btn-outline" onAction="#cancel" cancelButton="true"/>
