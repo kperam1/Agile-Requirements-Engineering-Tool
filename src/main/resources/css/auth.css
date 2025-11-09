@@ -1,0 +1,40 @@
+.app-title { font-size: 20px; font-weight: bold; -fx-font-size: 20px; -fx-font-weight: bold; }
+.form-title { font-size: 16px; font-weight: bold; -fx-font-size: 16px; -fx-font-weight: bold; }
+.primary-button { background-color: #1976d2; font-weight: bold; -fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-weight: bold; }
+.primary-button:hover { background-color: #1565c0; -fx-background-color: #1565c0; }
+.message-label { font-size: 12px; -fx-font-size: 12px; }
+TextField, PasswordField, ComboBox { -fx-pref-width: 260; }
+
+.social-button {
+	background-color: white;
+	border-color: #e0e0e0;
+	border-width: 1px;
+	border-radius: 25px;
+	cursor: pointer;
+	min-width: 50px;
+	min-height: 50px;
+	max-width: 50px;
+	max-height: 50px;
+	padding: 0;
+
+	-fx-background-color: white;
+	-fx-border-color: #e0e0e0;
+	-fx-border-width: 1px;
+	-fx-border-radius: 25px;
+	-fx-background-radius: 25px;
+	-fx-cursor: hand;
+	-fx-min-width: 50px;
+	-fx-min-height: 50px;
+	-fx-max-width: 50px;
+	-fx-max-height: 50px;
+	-fx-padding: 0;
+}
+
+.social-button:hover {
+	-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.12), 6, 0.0, 0, 2);
+}
+
+.social-button > .graphic {
+	-fx-alignment: center;
+}
+
