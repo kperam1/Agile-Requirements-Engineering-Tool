@@ -141,6 +141,10 @@ public class DashboardView {
         box.setAlignment(Pos.CENTER);
 
         VBox ideaCard = createActionCard("Create Idea", "Share your innovative ideas with the team", "card-blue");
+        ideaCard.setOnMouseClicked(e -> {
+            com.example.ideaboard.util.DialogHelper.openCreateIdeaDialog();
+        });
+
         VBox storyCard = createActionCard("Create User Story", "Convert ideas into actionable stories", "card-blue");
         VBox backlogCard = createActionCard("Prioritize Backlog", "Reorder stories by business value", "card-yellow");
         VBox reportCard = createActionCard("Generate Reports", "View velocity and burndown charts", "card-green");

@@ -18,8 +18,6 @@ public class Workspace extends Application {
         sidebar.setPrefWidth(200);
         sidebar.getStyleClass().add("sidebar");
 
-
-
         Button dashboardBtn = new Button("Dashboard");
         Button ideationBtn = new Button("Ideation Board");
         Button backlogBtn = new Button("Backlog");
@@ -27,7 +25,7 @@ public class Workspace extends Application {
         Button reportsBtn = new Button("Reports");
         Button settingsBtn = new Button("Team Settings");
 
-        sidebar.getChildren().addAll( dashboardBtn, ideationBtn, backlogBtn, sprintBtn, reportsBtn, settingsBtn);
+        sidebar.getChildren().addAll(dashboardBtn, ideationBtn, backlogBtn, sprintBtn, reportsBtn, settingsBtn);
 
         HBox topBar = new HBox();
         topBar.setPadding(new Insets(10, 20, 10, 20));
@@ -41,6 +39,9 @@ public class Workspace extends Application {
 
         Button createBtn = new Button("+ Create Idea");
         createBtn.getStyleClass().add("create-btn");
+        createBtn.setOnAction(e -> {
+            com.example.ideaboard.util.DialogHelper.openCreateIdeaDialog();
+        });
 
         topBar.getChildren().addAll(headerTitle, spacer, createBtn);
 
