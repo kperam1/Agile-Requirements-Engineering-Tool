@@ -5,9 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
-/**
- * Entity class representing an Idea in the ideation board.
- */
+
 @Entity
 @Table(name = "ideas")
 public class Idea {
@@ -39,11 +37,11 @@ public class Idea {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Default constructor
+    
     public Idea() {
     }
 
-    // Constructor with parameters
+    
     public Idea(String title, String category, String description, String status, String ownerName) {
         this.title = title;
         this.category = category;
@@ -63,7 +61,7 @@ public class Idea {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    
     public Long getId() {
         return id;
     }
