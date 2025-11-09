@@ -1,6 +1,7 @@
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\config\CorsConfig.java
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\controller\IdeaController.java
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\IdeaBoardBackendApplication.java
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\model\Idea.java
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\repository\IdeaRepository.java
-C:\Users\disha\Downloads\idea\backend\src\main\java\com\example\ideaboard\service\IdeaService.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\config\CorsConfig.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\controller\IdeaController.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\IdeaBoardBackendApplication.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\model\Idea.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\model\IdeaStatus.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\repository\IdeaRepository.java
+C:\Users\disha\Downloads\New folder\backend\src\main\java\com\example\ideaboard\service\IdeaService.java
