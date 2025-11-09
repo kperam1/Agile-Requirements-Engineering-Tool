@@ -4,3 +4,27 @@ target/
 .idea/
 .vscode/
 *.log
+
+# Build outputs
+/bin/
+/out/
+/lib/*.jar
+
+# IDE files
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+Thumbs.db
+.vscode-01/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment files
+.env
+*.env.local

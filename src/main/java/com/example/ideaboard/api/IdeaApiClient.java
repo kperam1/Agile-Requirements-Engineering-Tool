@@ -1,0 +1,85 @@
+package com.example.ideaboard.api;
+import com.example.ideaboard.model.IdeaDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.List;
+public class IdeaApiClient {
+    private static final String BASE_URL = "http://localhost:8080/api/ideas";
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    public IdeaApiClient() {
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+    public List<IdeaDto> list() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL))
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+        HttpResponse<String> response = httpClient.send(request, 
+                HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to fetch ideas. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), 
+                new TypeReference<List<IdeaDto>>() {});
+    }
+    public IdeaDto get(long id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/" + id))
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+        HttpResponse<String> response = httpClient.send(request, 
+                HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            throw new RuntimeException("Idea not found with id: " + id);
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to fetch idea. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), IdeaDto.class);
+    }
+    public IdeaDto approve(long id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/" + id + "/approve"))
+                .method("PATCH", HttpRequest.BodyPublishers.noBody())
+                .header("Accept", "application/json")
+                .build();
+        HttpResponse<String> response = httpClient.send(request, 
+                HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            throw new RuntimeException("Idea not found with id: " + id);
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to approve idea. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), IdeaDto.class);
+    }
+    public IdeaDto reject(long id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/" + id + "/reject"))
+                .method("PATCH", HttpRequest.BodyPublishers.noBody())
+                .header("Accept", "application/json")
+                .build();
+        HttpResponse<String> response = httpClient.send(request, 
+                HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            throw new RuntimeException("Idea not found with id: " + id);
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to reject idea. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), IdeaDto.class);
+    }
+}

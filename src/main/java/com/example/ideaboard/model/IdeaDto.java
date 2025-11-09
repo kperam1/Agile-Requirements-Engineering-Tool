@@ -1,53 +1,32 @@
 package com.example.ideaboard.model;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.time.LocalDateTime;
-@Entity
-@Table(name = "ideas")
-public class Idea {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class IdeaDto {
     private Long id;
-    @NotBlank(message = "Title is required")
-    @Size(max = 200, message = "Title must not exceed 200 characters")
-    @Column(nullable = false, length = 200)
     private String title;
-    @Column(nullable = false, length = 50)
     private String category;
-    @Column(columnDefinition = "TEXT")
     private String description;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     private IdeaStatus status;
-    @Column(name = "owner_name", length = 100)
-    private String ownerName;
-    @Column(name = "primary_actor", length = 120)
+    @JsonProperty("primaryActor")
+    @JsonAlias("ownerName")
     private String primaryActor;
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @JsonProperty("createdAt")
     private LocalDateTime createdAt;
-    @Column(name = "updated_at")
+    @JsonProperty("updatedAt")
     private LocalDateTime updatedAt;
-    public Idea() {
-    }
-    public Idea(String title, String category, String description, IdeaStatus status, String ownerName) {
+    public IdeaDto() {}
+    public IdeaDto(Long id, String title, String category, String description, 
+                   IdeaStatus status, String primaryActor, 
+                   LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
         this.title = title;
         this.category = category;
         this.description = description;
         this.status = status;
-        this.ownerName = ownerName;
-    }
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = IdeaStatus.NEW;
-        }
-    }
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.primaryActor = primaryActor;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
     public Long getId() {
         return id;
@@ -79,14 +58,8 @@ public class Idea {
     public void setStatus(IdeaStatus status) {
         this.status = status;
     }
-    public String getOwnerName() {
-        return ownerName;
-    }
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
-    }
     public String getPrimaryActor() {
-        return primaryActor != null ? primaryActor : ownerName;
+        return primaryActor;
     }
     public void setPrimaryActor(String primaryActor) {
         this.primaryActor = primaryActor;
@@ -105,13 +78,10 @@ public class Idea {
     }
     @Override
     public String toString() {
-        return "Idea{" +
+        return "IdeaDto{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
-                ", category='" + category + '\'' +
                 ", status=" + status +
-                ", ownerName='" + ownerName + '\'' +
-                ", createdAt=" + createdAt +
                 '}';
     }
 }

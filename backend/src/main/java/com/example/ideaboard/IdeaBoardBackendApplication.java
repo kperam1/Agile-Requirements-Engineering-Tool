@@ -1,10 +1,8 @@
 package com.example.ideaboard;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class IdeaBoardBackendApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(IdeaBoardBackendApplication.class, args);
         System.out.println("\n========================================");
