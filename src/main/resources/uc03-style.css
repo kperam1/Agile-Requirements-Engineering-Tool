@@ -1,0 +1,159 @@
+
+.root {
+  -fx-font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  -fx-background-color: #ffffff;
+  -fx-padding: 8;
+}
+
+
+.heading {
+  -fx-font-size: 18px;
+  -fx-font-weight: 600;
+  -fx-padding: 0 0 8 0;
+}
+
+.label {
+  -fx-font-size: 13px;
+  -fx-text-fill: #111827;
+}
+
+
+.text-field, .text-area, .combo-box, .spinner, .text-input {
+  -fx-background-radius: 10px;
+  -fx-border-radius: 10px;
+  -fx-padding: 8 10;
+  -fx-background-color: #f5f7fa;
+  -fx-border-color: transparent;
+  -fx-focus-color: rgba(0,118,204,0.14);
+  -fx-faint-focus-color: rgba(0,118,204,0.08);
+}
+
+
+.text-area {
+  -fx-control-inner-background: #f5f7fa;
+}
+
+
+.button {
+  -fx-background-radius: 8px;
+  -fx-padding: 8 14;
+}
+.button.cancel {
+  -fx-background-color: transparent;
+  -fx-border-color: #cbd5e1;
+  -fx-border-radius: 8px;
+  -fx-text-fill: #374151;
+}
+.button.primary {
+  -fx-background-color: linear-gradient(#0ea5e9, #0077cc);
+  -fx-text-fill: white;
+}
+
+
+.small-label {
+  -fx-font-size: 12px;
+  -fx-text-fill: #374151;
+}
+
+
+
+.list-cell {
+  -fx-text-fill: #111827;              
+  -fx-padding: 6 8;
+}
+
+
+.list-cell:hover {
+  -fx-background-color: #e8f6ff;      
+  -fx-text-fill: #111827;             
+}
+
+
+.list-cell:selected, .list-cell:filled:selected {
+  -fx-background-color: linear-gradient(#dbeeff, #cfe9ff); 
+  -fx-text-fill: #111827;             
+}
+
+
+.list-cell:selected:hover {
+  -fx-background-color: linear-gradient(#cfe9ff, #d8f0ff);
+  -fx-text-fill: #111827;
+}
+
+
+.combo-box .arrow-button {
+  -fx-background-color: transparent;
+}
+.combo-box .arrow {
+  -fx-shape: "M 0 0 L 4 4 L 8 0 Z";
+  -fx-scale-x: 1;
+  -fx-scale-y: 1;
+  -fx-padding: 6;
+  -fx-fill: #374151; 
+}
+
+
+.spinner .increment-arrow, .spinner .decrement-arrow {
+  -fx-fill: #374151;
+}
+
+
+.grid-pane {
+  -fx-hgap: 12;
+  -fx-vgap: 12;
+}
+
+
+.text-field, .text-area, .combo-box {
+  -fx-effect: dropshadow(gaussian, rgba(16,24,40,0.04), 6, 0.0, 0, 2);
+}
+
+
+.text-field .text, .text-area .text, .text-input {
+  -fx-fill: #6b7280; 
+}
+
+
+.combo-box {
+  -fx-prompt-text-fill: #6b7280; 
+}
+
+
+.combo-box .button-cell {
+  -fx-padding: 6 10;
+  -fx-alignment: center-left;
+  -fx-font-size: 13px;
+  -fx-text-fill: -fx-prompt-text-fill; 
+  -fx-opacity: 1; 
+}
+
+
+.combo-box .button-cell:filled {
+  -fx-text-fill: #111827;
+}
+
+
+.combo-box:focused, .combo-box:hover {
+  -fx-focus-color: rgba(0,118,204,0.18);
+  -fx-faint-focus-color: rgba(0,118,204,0.1);
+}
+
+
+.combo-box .editor {
+  -fx-background-color: transparent;
+  -fx-text-fill: #111827;
+  -fx-prompt-text-fill: #6b7280;
+}
+
+
+.combo-box .list-view {
+  -fx-padding: 6 0;
+  -fx-background-color: white;
+}
+
+
+.list-cell.placeholder {
+  -fx-text-fill: #6b7280;
+}
+
+
