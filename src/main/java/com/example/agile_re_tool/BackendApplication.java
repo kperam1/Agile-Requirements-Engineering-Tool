@@ -14,17 +14,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Single backend application for UC-03 (create) and UC-04 (edit).
- * Drop this file into src/main/java/com/example/agile_re_tool/backend/BackendApplication.java
- */
+
 @SpringBootApplication
 public class BackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(BackendApplication.class, args);
     }
 
-    // --- JPA entity ---
     @Entity
     @Table(name = "user_story")
     public static class UserStory {
@@ -55,7 +51,7 @@ public class BackendApplication {
         private Integer storyPoints;
 
         @Column(name = "size", length = 20)
-        private String size;          // t-shirt sizes
+        private String size;          
 
         @Column(name = "time_estimate", length = 120)
         private String timeEstimate;
@@ -69,7 +65,6 @@ public class BackendApplication {
         @Column(name = "created_at")
         private Instant createdAt = Instant.now();
 
-        // getters & setters
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
 
@@ -107,12 +102,10 @@ public class BackendApplication {
         public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     }
 
-    // --- Repository ---
     public interface UserStoryRepository extends JpaRepository<UserStory, Long> {
-        // basic CRUD is enough for now
+
     }
 
-    // --- Controller ---
     @RestController
     @RequestMapping("/api/stories")
     @Validated
@@ -123,7 +116,6 @@ public class BackendApplication {
             this.repo = repo;
         }
 
-        // create
         @PostMapping
         public ResponseEntity<UserStory> create(@RequestBody @Validated UserStoryCreateDto dto) {
             UserStory s = new UserStory();
@@ -142,14 +134,12 @@ public class BackendApplication {
             return ResponseEntity.ok(saved);
         }
 
-        // read by id
         @GetMapping("/{id}")
         public ResponseEntity<UserStory> getById(@PathVariable Long id) {
             Optional<UserStory> o = repo.findById(id);
             return o.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         }
 
-        // update
         @PutMapping("/{id}")
         public ResponseEntity<UserStory> update(@PathVariable Long id, @RequestBody @Validated UserStoryCreateDto dto) {
             return repo.findById(id).map(existing -> {
@@ -168,14 +158,12 @@ public class BackendApplication {
             }).orElseGet(() -> ResponseEntity.notFound().build());
         }
 
-        // list (small)
         @GetMapping
         public List<UserStory> listAll() {
             return repo.findAll();
         }
     }
 
-    // --- DTOs ---
     public static class UserStoryCreateDto {
         @NotBlank
         private String title;
@@ -189,7 +177,6 @@ public class BackendApplication {
         private String priority;
         private String status;
 
-        // getters / setters
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
         public String getDescription() { return description; }
