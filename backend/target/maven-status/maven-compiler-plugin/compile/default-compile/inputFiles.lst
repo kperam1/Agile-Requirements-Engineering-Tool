@@ -1,0 +1,6 @@
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/IdeaBoardBackendApplication.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/config/CorsConfig.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/controller/IdeaController.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/model/Idea.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/repository/IdeaRepository.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/backend/src/main/java/com/example/ideaboard/service/IdeaService.java

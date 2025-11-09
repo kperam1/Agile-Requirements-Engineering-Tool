@@ -1,0 +1,7 @@
+com/example/ideaboard/service/IdeaService.class
+com/example/ideaboard/controller/IdeaController.class
+com/example/ideaboard/config/CorsConfig$1.class
+com/example/ideaboard/repository/IdeaRepository.class
+com/example/ideaboard/config/CorsConfig.class
+com/example/ideaboard/model/Idea.class
+com/example/ideaboard/IdeaBoardBackendApplication.class
