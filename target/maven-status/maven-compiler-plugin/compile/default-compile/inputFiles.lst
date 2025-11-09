@@ -1,0 +1,15 @@
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/AgileReToolDesktopApp.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/config/StageManager.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/controller/LoginControllerApi.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/controller/SignupControllerApi.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/model/User.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/repository/UserRepository.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/service/UserService.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/agile/requirements/view/FxmlView.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/AgileRequirementsEngineeringToolApplication.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/controller/HomeController.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/ui/DashboardView.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/agile_re_tool/ui/Workspace.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/ideaboard/MainApp.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/ideaboard/controllers/CreateIdeaController.java
+/Users/ignite/Downloads/Agile-Requirements-Engineering-Tool/src/main/java/com/example/ideaboard/util/DialogHelper.java

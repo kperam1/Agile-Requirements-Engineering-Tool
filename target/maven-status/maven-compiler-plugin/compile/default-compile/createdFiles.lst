@@ -1,0 +1,17 @@
+com/agile/requirements/config/StageManager.class
+com/agile/requirements/repository/UserRepository.class
+com/agile/requirements/controller/LoginControllerApi.class
+com/agile/requirements/service/UserService.class
+com/example/ideaboard/controllers/CreateIdeaController.class
+com/agile/requirements/controller/SignupControllerApi.class
+com/agile/requirements/view/FxmlView$1.class
+com/example/agile_re_tool/ui/DashboardView.class
+com/example/ideaboard/util/DialogHelper.class
+com/example/agile_re_tool/ui/Workspace.class
+com/agile/requirements/view/FxmlView.class
+com/example/agile_re_tool/AgileRequirementsEngineeringToolApplication.class
+com/agile/requirements/model/User.class
+com/agile/requirements/AgileReToolDesktopApp.class
+com/example/ideaboard/MainApp.class
+com/example/agile_re_tool/controller/HomeController.class
+com/agile/requirements/view/FxmlView$2.class
