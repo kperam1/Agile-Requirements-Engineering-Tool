@@ -51,7 +51,6 @@ public class LoginControllerApi implements Initializable {
                 loginButton.setDisable(false);
                 if (success) {
                     showSuccess("Login successful");
-                    // TODO: switch to main workspace/dashboard scene when implemented
                 } else {
                     showError("Invalid credentials");
                     passwordField.clear();
