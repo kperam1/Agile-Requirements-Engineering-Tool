@@ -11,7 +11,6 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Create a simple main window with a button to open the Create Idea modal
             Button openModalButton = new Button("Open Create Idea Form");
             openModalButton.setOnAction(e -> openCreateIdeaDialog());
             openModalButton.setStyle(
@@ -37,7 +36,6 @@ public class MainApp extends Application {
     }
     private void openCreateIdeaDialog() {
         try {
-            // Load the FXML file
             FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/com/example/ideaboard/views/create_idea.fxml")
             );

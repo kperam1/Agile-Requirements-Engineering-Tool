@@ -1,85 +1,87 @@
 package com.agile.requirements.controller;
 
-import com.agile.requirements.config.StageManager;
-import com.agile.requirements.service.UserService;
-import com.agile.requirements.view.FxmlView;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.Parent;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ResourceBundle;
 
-/**
- * Simplified login controller: directly uses UserService (no HTTP layer) for basic auth demo.
- */
-@Controller
-public class LoginControllerApi implements Initializable {
+public class LoginControllerApi {
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
-    @FXML private Button loginButton;
-    @FXML private Hyperlink signupLink;
-    @FXML private Label messageLabel;
     @FXML private CheckBox rememberMeCheckBox;
-
-    @Autowired private UserService userService;
-    @Autowired private StageManager stageManager;
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) { }
+    @FXML private Label messageLabel;
 
     @FXML
-    private void handleLogin(ActionEvent event) {
-        messageLabel.setText("");
-        if (!validateInputs()) return;
+    private void handleLogin() {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
-        loginButton.setDisable(true);
-        showInfo("Authenticating...");
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            messageLabel.setText("Username and password are required.");
+            return;
+        }
 
-        // Run auth in background to avoid UI freeze (trivial here but scalable later)
-        new Thread(() -> {
-            boolean success = userService.authenticate(
-                    usernameField.getText().trim(),
-                    passwordField.getText()
-            ).isPresent();
+        try {
+            String apiUrl = String.format("http://localhost:8080/api/auth/login?username=%s&password=%s",
+                    username, password);
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
 
-            javafx.application.Platform.runLater(() -> {
-                loginButton.setDisable(false);
-                if (success) {
-                    showSuccess("Login successful");
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String response = in.readLine();
+                in.close();
+
+                if (response != null && !response.equals("null") && !response.isBlank()) {
+                    openWorkspace();
                 } else {
-                    showError("Invalid credentials");
-                    passwordField.clear();
-                    passwordField.requestFocus();
+                    messageLabel.setText("Invalid credentials. Try again.");
                 }
-            });
-        }).start();
+            } else {
+                messageLabel.setText("Server error. Try again.");
+            }
+
+            conn.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+            messageLabel.setText("Backend not reachable.");
+        }
     }
 
     @FXML
-    private void handleSignupLink(ActionEvent event) {
-        stageManager.switchScene(FxmlView.SIGNUP);
+    private void handleSignupLink() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Signup.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/auth.css").toExternalForm());
+
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private boolean validateInputs() {
-        if (usernameField.getText().trim().isEmpty()) {
-            showError("Username required");
-            usernameField.requestFocus();
-            return false;
+    private void openWorkspace() {
+        try {
+            Stage currentStage = (Stage) usernameField.getScene().getWindow();
+            currentStage.close();
+            new com.example.agile_re_tool.ui.Workspace().start(new Stage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            messageLabel.setText("Error loading workspace.");
         }
-        if (passwordField.getText().isEmpty()) {
-            showError("Password required");
-            passwordField.requestFocus();
-            return false;
-        }
-        return true;
     }
-
-    private void showError(String msg) { messageLabel.setText(msg); messageLabel.setStyle("-fx-text-fill:#d32f2f;"); }
-    private void showSuccess(String msg) { messageLabel.setText(msg); messageLabel.setStyle("-fx-text-fill:#388e3c;"); }
-    private void showInfo(String msg) { messageLabel.setText(msg); messageLabel.setStyle("-fx-text-fill:#1976d2;"); }
 }

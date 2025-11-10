@@ -2,7 +2,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.agile.requirements.controller.SignupControllerApi" fitToWidth="true" stylesheets="/css/auth.css">
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.agile.requirements.controller.SignupControllerApi"
+            fitToWidth="true"
+            stylesheets="/css/auth.css">
     <content>
         <VBox spacing="10" alignment="TOP_CENTER" prefWidth="420">
             <children>
@@ -29,20 +34,13 @@
                         <ComboBox fx:id="roleComboBox" GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="2" />
                     </children>
                 </GridPane>
-                <Button fx:id="signupButton" text="Sign Up" onAction="#handleSignup" styleClass="primary-button" maxWidth="Infinity" />
-                <Hyperlink fx:id="loginLink" text="Already have an account? Log in" onAction="#handleLoginLink" />
+                <Button fx:id="signupButton" text="Sign Up" onAction="#handleSignup"
+                        styleClass="primary-button" maxWidth="Infinity" />
+                <Hyperlink fx:id="loginLink" text="Already have an account? Log in"
+                           onAction="#handleLoginLink" />
                 <Label fx:id="messageLabel" text="" styleClass="message-label" wrapText="true" />
-                <!-- Placeholder social buttons (kept to satisfy @FXML fields) -->
-                <HBox spacing="6" alignment="CENTER">
-                    <children>
-                        <Button fx:id="googleSignupButton" visible="false" managed="false" />
-                        <Button fx:id="githubSignupButton" visible="false" managed="false" />
-                        <Button fx:id="microsoftSignupButton" visible="false" managed="false" />
-                        <Button fx:id="yahooSignupButton" visible="false" managed="false" />
-                    </children>
-                </HBox>
             </children>
-            <padding><Insets top="25" left="25" right="25" bottom="25" /></padding>
+            <padding><Insets top="25" left="25" right="25" bottom="25"/></padding>
         </VBox>
     </content>
 </ScrollPane>

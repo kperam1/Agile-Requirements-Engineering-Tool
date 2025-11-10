@@ -1,38 +1,32 @@
 package com.agile.requirements;
 
-import com.agile.requirements.view.FxmlView;
-import com.agile.requirements.config.StageManager;
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AgileReToolDesktopApp extends Application {
 
-    private ConfigurableApplicationContext springContext;
-
-    @Override
-    public void init() {
-        SpringApplication app = new SpringApplication(com.example.agile_re_tool.AgileRequirementsEngineeringToolApplication.class);
-        Map<String,Object> defaults = new HashMap<>();
-        defaults.put("spring.profiles.active","dev");
-        app.setDefaultProperties(defaults);
-        springContext = app.run();
-    }
-
     @Override
     public void start(Stage primaryStage) {
-        StageManager stageManager = springContext.getBean(StageManager.class);
-        stageManager.setPrimaryStage(primaryStage);
-        stageManager.switchScene(FxmlView.LOGIN);
-    }
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/Login.fxml")
+            );
+            Parent root = loader.load();
 
-    @Override
-    public void stop() {
-        if (springContext != null) {
-            springContext.close();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(
+                    getClass().getResource("/css/auth.css").toExternalForm()
+            );
+
+            primaryStage.setTitle("Agile RE Tool - Login");
+            primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
+            primaryStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

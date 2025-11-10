@@ -1,19 +1,16 @@
 package com.agile.requirements.controller;
 
-import com.agile.requirements.config.StageManager;
-import com.agile.requirements.service.UserService;
-import com.agile.requirements.view.FxmlView;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import org.springframework.stereotype.Controller;
-
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.Parent;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ResourceBundle;
 
-@Controller
-public class SignupControllerApi implements Initializable {
+public class SignupControllerApi {
 
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
@@ -22,69 +19,80 @@ public class SignupControllerApi implements Initializable {
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private ComboBox<String> roleComboBox;
-    @FXML private Button signupButton;
-    @FXML private Hyperlink loginLink;
     @FXML private Label messageLabel;
 
-    private final UserService userService;
-    private final StageManager stageManager;
-
-    public SignupControllerApi(UserService userService, StageManager stageManager) {
-        this.userService = userService;
-        this.stageManager = stageManager;
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        roleComboBox.getItems().setAll(
-            "Product Owner",
-            "Scrum Master",
-            "Developer",
-            "Tester/QA",
-            "Business Analyst",
-            "Stakeholder",
-            "Project Manager"
-        );
-        roleComboBox.getSelectionModel().selectFirst();
+    @FXML
+    public void initialize() {
+        roleComboBox.getItems().addAll("USER", "ADMIN");
+        roleComboBox.setValue("USER");
     }
 
     @FXML
-    private void handleSignup(ActionEvent event) {
-        messageLabel.setText("");
-        if (!validateInputs()) return;
+    private void handleSignup() {
+        String username = usernameField.getText();
+        String email = emailField.getText();
+        String password = passwordField.getText();
+        String confirmPassword = confirmPasswordField.getText();
+        String role = roleComboBox.getValue();
+
+        if (username.isBlank() || email.isBlank() || password.isBlank()) {
+            messageLabel.setText("All fields are required.");
+            return;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            messageLabel.setText("Passwords do not match.");
+            return;
+        }
 
         try {
-            userService.register(
-                    firstNameField.getText().trim(),
-                    lastNameField.getText().trim(),
-                    emailField.getText().trim(),
-                    usernameField.getText().trim(),
-                    passwordField.getText(),
-                    roleComboBox.getValue()
+            String jsonInput = String.format(
+                "{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\",\"role\":\"%s\"}",
+                username, email, password, role
             );
-            messageLabel.setStyle("-fx-text-fill:#388e3c;");
-            messageLabel.setText("Account created. You can log in now.");
-        } catch (Exception ex) {
-            messageLabel.setStyle("-fx-text-fill:#d32f2f;");
-            messageLabel.setText("Signup failed: " + ex.getMessage());
+
+            URL url = new URL("http://localhost:8080/api/auth/signup");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInput.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200 || responseCode == 201) {
+                messageLabel.setText("Signup successful! You can log in now.");
+            } else {
+                InputStream errorStream = conn.getErrorStream();
+                if (errorStream != null) {
+                    String response = new String(errorStream.readAllBytes());
+                    System.err.println("Error response: " + response);
+                }
+                messageLabel.setText("Signup failed. Try again.");
+            }
+            conn.disconnect();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            messageLabel.setText("Error connecting to backend.");
         }
     }
 
     @FXML
-    private void handleLoginLink(ActionEvent event) {
-        stageManager.switchScene(FxmlView.LOGIN);
-    }
+    private void handleLoginLink() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/auth.css").toExternalForm());
 
-    private boolean validateInputs() {
-        if (firstNameField.getText().trim().isEmpty()) { showErr("First name required"); return false; }
-        if (lastNameField.getText().trim().isEmpty()) { showErr("Last name required"); return false; }
-        if (emailField.getText().trim().isEmpty()) { showErr("Email required"); return false; }
-        if (usernameField.getText().trim().isEmpty()) { showErr("Username required"); return false; }
-        if (passwordField.getText().isEmpty()) { showErr("Password required"); return false; }
-        if (!passwordField.getText().equals(confirmPasswordField.getText())) { showErr("Passwords do not match"); return false; }
-        if (roleComboBox.getValue() == null) { showErr("Role required"); return false; }
-        return true;
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
-    private void showErr(String msg) { messageLabel.setStyle("-fx-text-fill:#d32f2f;"); messageLabel.setText(msg); }
 }
