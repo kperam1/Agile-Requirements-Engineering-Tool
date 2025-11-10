@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.ideaboard.controllers.CreateIdeaController"
+            prefWidth="420" prefHeight="480"
+            style="-fx-background-color: #fefefe; -fx-padding: 24;">
+    <VBox spacing="14">
+        <Label text="Create New Idea" style="-fx-font-size:18; -fx-font-weight:bold;"/>
+
+        <Label text="Title"/>
+        <TextField fx:id="titleField" promptText="Enter idea title"/>
+
+        <Label text="Category"/>
+        <ChoiceBox fx:id="categoryChoice"/>
+
+        <Label text="Description"/>
+        <TextArea fx:id="descriptionArea" promptText="Describe the idea..." prefRowCount="4"/>
+
+        <Label text="Status"/>
+        <ChoiceBox fx:id="statusChoice"/>
+
+        <Label text="Owner Name"/>
+        <TextField fx:id="ownerNameField" promptText="Your name"/>
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button text="Cancel" onAction="#cancel"/>
+            <Button text="Create" onAction="#createIdea" style="-fx-background-color:#2196F3; -fx-text-fill:white;"/>
+        </HBox>
+    </VBox>
+</AnchorPane>
