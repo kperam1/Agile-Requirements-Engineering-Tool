@@ -6,7 +6,6 @@ import javafx.scene.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.geometry.*;
-
 import com.example.ideaboard.util.DialogHelper;
 
 public class Workspace extends Application {
@@ -80,6 +79,12 @@ public class Workspace extends Application {
             }
         });
 
+        backlogBtn.setOnAction(e -> {
+            BacklogView backlogView = new BacklogView();
+            currentView[0] = (BorderPane) backlogView.getView();
+            root.setCenter(currentView[0]);
+        });
+
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(
                 getClass().getResource("/styles/workspace.css").toExternalForm()
@@ -93,3 +98,4 @@ public class Workspace extends Application {
         launch();
     }
 }
+
