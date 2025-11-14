@@ -14,6 +14,9 @@
 .card-green {
     -fx-background-color: #e7f7f0;
 }
+.card-purple {
+    -fx-background-color: #f3e8ff;
+}
 .card-title {
     -fx-font-size: 14px;
     -fx-font-weight: bold;

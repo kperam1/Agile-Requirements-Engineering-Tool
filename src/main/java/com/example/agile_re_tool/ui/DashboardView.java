@@ -19,6 +19,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import com.example.agile_re_tool.UC03CreateUserStory;
+import com.example.agile_re_tool.ViewStoryWithComments;
 
 public class DashboardView {
 
@@ -155,8 +156,29 @@ public class DashboardView {
         ideaStatus.getStyleClass().add("idea-status");
 
         text.getChildren().addAll(ideaTitle, ideaDesc, ideaStatus);
-        idea.getChildren().add(text);
+        
+        // Add spacer and View Comments button
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        Button viewCommentsBtn = new Button("View Comments");
+        viewCommentsBtn.getStyleClass().add("btn-secondary");
+        viewCommentsBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; " +
+                "-fx-padding: 6 12; -fx-background-radius: 6; -fx-cursor: hand;");
+        viewCommentsBtn.setOnAction(e -> openCommentsView());
+        
+        idea.getChildren().addAll(text, spacer, viewCommentsBtn);
         return idea;
+    }
+    
+    private void openCommentsView() {
+        try {
+            ViewStoryWithComments commentsView = new ViewStoryWithComments();
+            Stage commentsStage = new Stage();
+            commentsView.start(commentsStage);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private VBox createCurrentSprintSection() {
@@ -205,10 +227,13 @@ public class DashboardView {
             }
         });
 
+        VBox commentsCard = createActionCard("View Story Comments", "Review and add comments to stories", "card-purple");
+        commentsCard.setOnMouseClicked(e -> openCommentsView());
+
         VBox backlogCard = createActionCard("Prioritize Backlog", "Reorder stories by business value", "card-yellow");
         VBox reportCard = createActionCard("Generate Reports", "View velocity and burndown charts", "card-green");
 
-        box.getChildren().addAll(ideaCard, storyCard, backlogCard, reportCard);
+        box.getChildren().addAll(ideaCard, storyCard, commentsCard, backlogCard, reportCard);
         return box;
     }
 
