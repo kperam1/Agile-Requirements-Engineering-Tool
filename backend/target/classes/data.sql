@@ -1,3 +1,6 @@
+-- Sample data for Review Ideas feature
+-- Note: Run this manually or set spring.sql.init.mode=always temporarily
+
 INSERT INTO ideas (title, category, description, status, primary_actor, owner_name, created_at, updated_at) VALUES
 ('Mobile App Redesign', 'Product Enhancement', 'Redesign the mobile app interface to improve user experience and increase engagement rates. Focus on modern UI patterns, smooth animations, and intuitive navigation.', 'APPROVED', 'Sarah Chen', 'Sarah Chen', '2025-11-01 10:30:00', '2025-11-07 14:20:00'),
 ('AI Content Generator', 'Innovation Project', 'Develop an AI-powered content generation tool for marketing copy and social media posts. Integrate with GPT models and provide customizable templates for different content types.', 'UNDER_REVIEW', 'Alex Johnson', 'Alex Johnson', '2025-11-02 09:15:00', '2025-11-06 16:45:00'),
