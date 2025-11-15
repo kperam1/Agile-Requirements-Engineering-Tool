@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -34,7 +33,22 @@ public class UC04EditUserStory extends Application {
 
     private static final List<Integer> FIBONACCI_POINTS = List.of(1, 2, 3, 5, 8, 13, 21);
 
-    private long editingId = 1L;
+    private long editingId;
+
+    public UC04EditUserStory() {}
+
+    public UC04EditUserStory(long storyId) {
+        this.editingId = storyId;
+    }
+
+    public void openWindow() {
+        Stage stage = new Stage();
+        try {
+            start(stage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -57,7 +71,6 @@ public class UC04EditUserStory extends Application {
             d.status = defaultStatus;
             return d;
         });
-
 
         Label heading = new Label("Edit Story");
         heading.setStyle("-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #111827;");
@@ -108,11 +121,14 @@ public class UC04EditUserStory extends Application {
         leftGrid.setHgap(12);
         leftGrid.setVgap(12);
         leftGrid.setPadding(new Insets(8, 12, 8, 12));
+
         ColumnConstraints lc0 = new ColumnConstraints();
         lc0.setPrefWidth(140);
         lc0.setHalignment(HPos.LEFT);
+
         ColumnConstraints lc1 = new ColumnConstraints();
         lc1.setHgrow(Priority.ALWAYS);
+
         leftGrid.getColumnConstraints().addAll(lc0, lc1);
 
         int r = 0;
@@ -138,7 +154,7 @@ public class UC04EditUserStory extends Application {
         if (existing.storyPoints != null && FIBONACCI_POINTS.contains(existing.storyPoints)) {
             pointsCombo.getSelectionModel().select(existing.storyPoints);
         } else {
-            pointsCombo.getSelectionModel().select((Integer) defaultStoryPoints);
+            pointsCombo.getSelectionModel().select(defaultStoryPoints);
         }
 
         ComboBox<String> tshirtCombo = new ComboBox<>();
@@ -163,58 +179,50 @@ public class UC04EditUserStory extends Application {
 
         VBox compactEstimateBox = new VBox(8);
         compactEstimateBox.setPadding(new Insets(8));
-        compactEstimateBox.setStyle("-fx-background-color: transparent;");
 
         HBox storyPointsRow = new HBox(8);
-        Label spLabel = new Label("Story Points:");
-        spLabel.setMinWidth(90);
-        storyPointsRow.getChildren().addAll(spLabel, pointsCombo);
-        storyPointsRow.setAlignment(Pos.CENTER_LEFT);
+        storyPointsRow.getChildren().addAll(new Label("Story Points:"), pointsCombo);
 
         HBox tshirtRow = new HBox(8);
-        Label tshLabel = new Label("Size:");
-        tshLabel.setMinWidth(90);
-        tshirtRow.getChildren().addAll(tshLabel, tshirtCombo);
-        tshirtRow.setAlignment(Pos.CENTER_LEFT);
+        tshirtRow.getChildren().addAll(new Label("Size:"), tshirtCombo);
 
         HBox timeRow = new HBox(8);
-        Label timeLabel = new Label("Time:");
-        timeLabel.setMinWidth(90);
-        timeRow.getChildren().addAll(timeLabel, timeEstimateField);
-        timeRow.setAlignment(Pos.CENTER_LEFT);
+        timeRow.getChildren().addAll(new Label("Time:"), timeEstimateField);
 
         Runnable updateEstimateCompact = () -> {
             compactEstimateBox.getChildren().clear();
             String mode = estimateTypeCombo.getValue();
-            if ("Story Points".equals(mode)) {
-                compactEstimateBox.getChildren().add(storyPointsRow);
-            } else if ("T-shirt Sizes".equals(mode)) {
-                compactEstimateBox.getChildren().add(tshirtRow);
-            } else if ("Time".equals(mode)) {
-                compactEstimateBox.getChildren().add(timeRow);
-            }
+            if ("Story Points".equals(mode)) compactEstimateBox.getChildren().add(storyPointsRow);
+            else if ("T-shirt Sizes".equals(mode)) compactEstimateBox.getChildren().add(tshirtRow);
+            else if ("Time".equals(mode)) compactEstimateBox.getChildren().add(timeRow);
         };
+
         updateEstimateCompact.run();
         estimateTypeCombo.setOnAction(e -> updateEstimateCompact.run());
 
-
         Label assignedHeader = new Label("Assigned To");
         assignedHeader.setStyle("-fx-font-weight: 600; -fx-text-fill: #111827;");
+
         HBox assignedCard = new HBox(12);
         assignedCard.setPadding(new Insets(10));
         assignedCard.setStyle("-fx-background-color: #f3f8fb; -fx-background-radius: 10;");
         assignedCard.setAlignment(Pos.CENTER_LEFT);
+
         Circle avatarCircle = new Circle(22, Color.web("#e6f4ff"));
-        Text initials = new Text(""); initials.setStyle("-fx-font-weight: 700; -fx-fill: #0b66c2;");
+        Text initials = new Text("");
+        initials.setStyle("-fx-font-weight: 700; -fx-fill: #0b66c2;");
         StackPane avatarPane = new StackPane(avatarCircle, initials);
+
         VBox assignedText = new VBox(2);
-        Label assignedNameLabel = new Label(""); assignedNameLabel.setStyle("-fx-font-weight: 700;");
-        Label assignedRoleLabel = new Label("Developer"); assignedRoleLabel.setStyle("-fx-text-fill: #6b7280;");
+        Label assignedNameLabel = new Label("");
+        assignedNameLabel.setStyle("-fx-font-weight: 700;");
+        Label assignedRoleLabel = new Label("Developer");
+        assignedRoleLabel.setStyle("-fx-text-fill: #6b7280;");
+
         assignedText.getChildren().addAll(assignedNameLabel, assignedRoleLabel);
         assignedCard.getChildren().addAll(avatarPane, assignedText);
         assignedCard.setVisible(false);
 
-        final Runnable[] clearAssigned = new Runnable[1];
         java.util.function.Consumer<String> updateAssigned = name -> {
             if (name == null || name.isBlank()) {
                 assignedCard.setVisible(false);
@@ -223,35 +231,38 @@ public class UC04EditUserStory extends Application {
                 assignedNameLabel.setText(name);
 
                 String[] parts = name.trim().split("\\s+");
-                String inits = Arrays.stream(parts).map(s -> s.substring(0,1).toUpperCase()).limit(2).collect(Collectors.joining());
+                String inits = Arrays.stream(parts)
+                        .map(s -> s.substring(0, 1).toUpperCase())
+                        .limit(2).collect(Collectors.joining());
                 initials.setText(inits);
             }
         };
 
         updateAssigned.accept(existing.assignee);
-
         assigneeCombo.setOnAction(e -> updateAssigned.accept(assigneeCombo.getValue()));
 
         VBox rightColumn = new VBox(16);
         rightColumn.setPadding(new Insets(12));
         rightColumn.setPrefWidth(320);
-  
-        rightColumn.getChildren().addAll(new Label("Estimate"), estimateTypeCombo, compactEstimateBox,
+        rightColumn.getChildren().addAll(
+                new Label("Estimate"), estimateTypeCombo, compactEstimateBox,
                 new Label("Priority"), priorityCombo,
                 new Label("Status"), statusCombo,
-                assignedHeader, assignedCard);
+                assignedHeader, assignedCard
+        );
 
         Button deleteBtn = new Button("Delete Task");
         deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #f87171; -fx-text-fill: #ef4444; -fx-background-radius:8; -fx-border-radius:8; -fx-padding:8 14;");
+
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-text-fill: #374151; -fx-background-radius:8; -fx-border-radius:8; -fx-padding:8 14;");
+
         Button saveBtn = new Button("Save Changes");
         saveBtn.setStyle("-fx-background-color: linear-gradient(#2563eb, #1e40af); -fx-text-fill: white; -fx-background-radius:8; -fx-padding:8 14;");
 
         HBox buttonsRow = new HBox(12, deleteBtn, cancelBtn, saveBtn);
         buttonsRow.setPadding(new Insets(12));
         buttonsRow.setAlignment(Pos.CENTER_RIGHT);
-
 
         BorderPane root = new BorderPane();
         root.setLeft(leftColumn);
@@ -261,9 +272,7 @@ public class UC04EditUserStory extends Application {
         cancelBtn.setOnAction(e -> primaryStage.close());
 
         deleteBtn.setOnAction(e -> {
-            
             Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete this task?", ButtonType.YES, ButtonType.NO);
-            a.setTitle("Confirm delete");
             a.setHeaderText(null);
             Optional<ButtonType> res = a.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.YES) {
@@ -278,23 +287,26 @@ public class UC04EditUserStory extends Application {
         });
 
         saveBtn.setOnAction(e -> {
-            String title = titleField.getText();
-            if (title == null || title.isBlank()) {
+            if (titleField.getText().isBlank()) {
                 showAlert(Alert.AlertType.ERROR, "Validation error", "Title is required");
                 return;
             }
+
             CreateStoryDto dto = new CreateStoryDto();
-            dto.title = title.trim();
+            dto.title = titleField.getText().trim();
             dto.description = emptyToNull(descriptionArea.getText());
             dto.acceptanceCriteria = emptyToNull(acceptanceArea.getText());
             dto.assignee = assigneeCombo.getValue();
             dto.estimateType = estimateTypeCombo.getValue();
 
-            if ("Story Points".equals(dto.estimateType)) {
-                dto.storyPoints = pointsCombo.getValue();
-            } else dto.storyPoints = null;
-            if ("T-shirt Sizes".equals(dto.estimateType)) dto.size = tshirtCombo.getValue(); else dto.size = null;
-            if ("Time".equals(dto.estimateType)) dto.timeEstimate = emptyToNull(timeEstimateField.getText()); else dto.timeEstimate = null;
+            if ("Story Points".equals(dto.estimateType)) dto.storyPoints = pointsCombo.getValue();
+            else dto.storyPoints = null;
+
+            if ("T-shirt Sizes".equals(dto.estimateType)) dto.size = tshirtCombo.getValue();
+            else dto.size = null;
+
+            if ("Time".equals(dto.estimateType)) dto.timeEstimate = emptyToNull(timeEstimateField.getText());
+            else dto.timeEstimate = null;
 
             dto.priority = priorityCombo.getValue();
             dto.status = statusCombo.getValue();
@@ -309,9 +321,10 @@ public class UC04EditUserStory extends Application {
         });
 
         Scene scene = new Scene(root, 1120, 720);
-        
+
         try {
-            String css = Optional.ofNullable(getClass().getResource("/uc03-style.css")).map(u -> u.toExternalForm()).orElse(null);
+            String css = Optional.ofNullable(getClass().getResource("/uc03-style.css"))
+                    .map(u -> u.toExternalForm()).orElse(null);
             if (css != null) scene.getStylesheets().add(css);
         } catch (Exception ignored) {}
 
@@ -321,37 +334,34 @@ public class UC04EditUserStory extends Application {
 
     private void loadConfig() {
         Properties p = new Properties();
-        
+
         try (InputStream in = getClass().getResourceAsStream("/uc-config.properties")) {
             if (in != null) {
                 p.load(in);
+
                 String a = p.getProperty("assignees");
-                if (a != null && !a.isBlank()) {
-                    assignees = Arrays.stream(a.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-                }
+                if (a != null && !a.isBlank()) assignees = Arrays.stream(a.split(","))
+                        .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+
                 String et = p.getProperty("estimate.types");
-                if (et != null && !et.isBlank()) {
+                if (et != null && !et.isBlank())
                     estimateTypes = Arrays.stream(et.split(",")).map(String::trim).collect(Collectors.toList());
-                } else {
-                    estimateTypes = List.of("Story Points", "T-shirt Sizes", "Time");
-                }
+                else estimateTypes = List.of("Story Points", "T-shirt Sizes", "Time");
+
                 String ts = p.getProperty("tshirt.sizes");
-                if (ts != null && !ts.isBlank()) {
+                if (ts != null && !ts.isBlank())
                     tshirtSizes = Arrays.stream(ts.split(",")).map(String::trim).collect(Collectors.toList());
-                } else {
-                    tshirtSizes = List.of("XS", "S", "M", "L", "XL", "XXL");
-                }
+                else tshirtSizes = List.of("XS", "S", "M", "L", "XL", "XXL");
+
                 String sp = p.getProperty("default.story.points");
                 if (sp != null) {
                     try { defaultStoryPoints = Integer.parseInt(sp.trim()); } catch (NumberFormatException ignored) {}
                 }
+
                 defaultPriority = Optional.ofNullable(p.getProperty("default.priority")).orElse(defaultPriority);
                 defaultStatus = Optional.ofNullable(p.getProperty("default.status")).orElse(defaultStatus);
-            } else {
-    
             }
-        } catch (IOException e) {
-        }
+        } catch (IOException ignored) {}
     }
 
     private static String emptyToNull(String s) {
@@ -364,7 +374,6 @@ public class UC04EditUserStory extends Application {
         Platform.runLater(() -> {
             Alert a = new Alert(t, body, ButtonType.OK);
             a.setTitle(title);
-            a.setHeaderText(null);
             a.showAndWait();
         });
     }
@@ -394,20 +403,20 @@ public class UC04EditUserStory extends Application {
             try (Connection c = DriverManager.getConnection(JDBC_URL)) {
                 try (Statement s = c.createStatement()) {
                     s.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS user_story (" +
-                        "id IDENTITY PRIMARY KEY, " +
-                        "title VARCHAR(255) NOT NULL, " +
-                        "description CLOB, " +
-                        "acceptance_criteria CLOB, " +
-                        "assignee VARCHAR(120), " +
-                        "estimate_type VARCHAR(50), " +
-                        "story_points INT, " +
-                        "size VARCHAR(20), " +
-                        "time_estimate VARCHAR(120), " +
-                        "priority VARCHAR(50), " +
-                        "status VARCHAR(50), " +
-                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                        ")"
+                            "CREATE TABLE IF NOT EXISTS user_story (" +
+                            "id IDENTITY PRIMARY KEY, " +
+                            "title VARCHAR(255) NOT NULL, " +
+                            "description CLOB, " +
+                            "acceptance_criteria CLOB, " +
+                            "assignee VARCHAR(120), " +
+                            "estimate_type VARCHAR(50), " +
+                            "story_points INT, " +
+                            "size VARCHAR(20), " +
+                            "time_estimate VARCHAR(120), " +
+                            "priority VARCHAR(50), " +
+                            "status VARCHAR(50), " +
+                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                            ")"
                     );
                 }
             } catch (SQLException e) {
@@ -474,6 +483,7 @@ public class UC04EditUserStory extends Application {
             String sql = "UPDATE user_story SET title=?, description=?, acceptance_criteria=?, assignee=?, estimate_type=?, story_points=?, size=?, time_estimate=?, priority=?, status=? WHERE id=?";
             try (Connection c = DriverManager.getConnection(JDBC_URL);
                  PreparedStatement ps = c.prepareStatement(sql)) {
+
                 ps.setString(1, dto.title);
                 ps.setString(2, dto.description);
                 ps.setString(3, dto.acceptanceCriteria);
@@ -486,8 +496,7 @@ public class UC04EditUserStory extends Application {
                 ps.setString(10, dto.status);
                 ps.setLong(11, id);
 
-                int affected = ps.executeUpdate();
-                if (affected == 0) throw new SQLException("No rows updated (id=" + id + ")");
+                ps.executeUpdate();
             }
         }
 

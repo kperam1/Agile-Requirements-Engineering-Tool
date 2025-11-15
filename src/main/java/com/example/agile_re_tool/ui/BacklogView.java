@@ -1,6 +1,7 @@
 package com.example.agile_re_tool.ui;
 
 import com.example.agile_re_tool.UC04EditUserStory;
+import com.example.agile_re_tool.UC03CreateUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -37,6 +38,11 @@ public class BacklogView {
 
         Button createBtn = new Button("+ Create Issue");
         Button filterBtn = new Button("Filter");
+
+        createBtn.setOnAction(e -> {
+            UC03CreateUserStory createWindow = new UC03CreateUserStory();
+            createWindow.openWindow();
+        });
 
         HBox header = new HBox(10, title, new Region(), searchField, filterBtn, createBtn);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -94,6 +100,8 @@ public class BacklogView {
             return;
         }
 
+        boolean addedAny = false;
+
         for (int i = 0; i < arr.length(); i++) {
             JSONObject obj = arr.getJSONObject(i);
 
@@ -103,11 +111,24 @@ public class BacklogView {
             int points = obj.optInt("storyPoints", 0);
             String assignee = obj.optString("assignedTo", "");
             String priority = obj.optString("priority", "Medium");
-            String status = obj.optString("status", "To Do");
+            String status = obj.optString("status", "Backlog");
+
+            if (!status.equalsIgnoreCase("Backlog")) {
+                continue;
+            }
+
+            addedAny = true;
 
             backlogList.getChildren().add(
                     createCard(id, title, desc, points, assignee, priority, status)
             );
+        }
+
+        if (!addedAny) {
+            Label empty = new Label("No backlog items yet.");
+            empty.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
+            empty.setPadding(new Insets(20));
+            backlogList.getChildren().add(empty);
         }
     }
 
