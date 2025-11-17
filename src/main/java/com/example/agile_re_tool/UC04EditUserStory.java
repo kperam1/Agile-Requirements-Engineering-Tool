@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.example.agile_re_tool.session.UserSession;
 
 public class UC04EditUserStory extends Application {
 
@@ -258,26 +259,95 @@ public class UC04EditUserStory extends Application {
         commentsHeader.setStyle("-fx-font-weight: 700; -fx-font-size: 14;");
 
         ListView<CommentDto> commentsList = new ListView<>();
-        commentsList.setPrefHeight(240);
+        commentsList.setPrefHeight(260);
         commentsList.setCellFactory(lv -> new ListCell<>() {
+            private final VBox container = new VBox(4);
+            private final Label meta = new Label();
+            private final Label bodyLabel = new Label();
+            private final HBox actions = new HBox(8);
+            private final Button editBtn = new Button("Edit");
+            private final Button deleteBtn = new Button("Delete");
+            private final Button saveBtn = new Button("Save");
+            private final Button cancelBtn = new Button("Cancel");
+            private TextArea editorArea;
+            private CommentDto current;
+
+            {
+                meta.setStyle("-fx-font-size:11; -fx-text-fill:#555;");
+                bodyLabel.setWrapText(true);
+                editBtn.setStyle("-fx-background-color:#3b82f6; -fx-text-fill:white; -fx-font-size:11; -fx-padding:4 8; -fx-background-radius:6;");
+                deleteBtn.setStyle("-fx-background-color:#ef4444; -fx-text-fill:white; -fx-font-size:11; -fx-padding:4 8; -fx-background-radius:6;");
+                saveBtn.setStyle("-fx-background-color:#10b981; -fx-text-fill:white; -fx-font-size:11; -fx-padding:4 8; -fx-background-radius:6;");
+                cancelBtn.setStyle("-fx-background-color:#6b7280; -fx-text-fill:white; -fx-font-size:11; -fx-padding:4 8; -fx-background-radius:6;");
+                actions.getChildren().addAll(editBtn, deleteBtn);
+                actions.setVisible(false);
+                container.getChildren().addAll(meta, bodyLabel, actions);
+                container.setPadding(new Insets(8));
+            }
+
+            private void enterEditMode() {
+                if (current == null) return;
+                editorArea = new TextArea(current.body);
+                editorArea.setPrefRowCount(3);
+                container.getChildren().set(1, editorArea);
+                actions.getChildren().setAll(saveBtn, cancelBtn);
+            }
+
+            private void exitEditMode(boolean refresh) {
+                container.getChildren().set(1, bodyLabel);
+                actions.getChildren().setAll(editBtn, deleteBtn);
+                if (refresh) bodyLabel.setText(current.body);
+            }
+
             @Override
             protected void updateItem(CommentDto item, boolean empty) {
                 super.updateItem(item, empty);
+                current = item;
                 if (empty || item == null) {
-                    setText(null);
                     setGraphic(null);
-                } else {
-                    String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                            .format(item.createdAt.atZone(ZoneId.systemDefault()));
-                    String author = Optional.ofNullable(item.author).filter(a -> !a.isBlank()).orElse("Anonymous");
-                    setText(author + " • " + time + "\n" + Optional.ofNullable(item.body).orElse(""));
-                    setStyle("-fx-padding: 8; -fx-control-inner-background: transparent;");
+                    return;
                 }
+                String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                        .format(item.createdAt.atZone(ZoneId.systemDefault()));
+                String author = Optional.ofNullable(item.author).filter(a -> !a.isBlank()).orElse("Anonymous");
+                meta.setText(author + " • " + time);
+                bodyLabel.setText(Optional.ofNullable(item.body).orElse(""));
+                String currentUser = Optional.ofNullable(UserSession.getCurrentUser()).orElse("");
+                boolean mine = !currentUser.isBlank() && currentUser.equals(item.author);
+                actions.setVisible(mine);
+                setGraphic(container);
+
+                editBtn.setOnAction(e -> enterEditMode());
+                cancelBtn.setOnAction(e -> exitEditMode(false));
+                saveBtn.setOnAction(e -> {
+                    String newBody = Optional.ofNullable(editorArea.getText()).orElse("").trim();
+                    if (newBody.isEmpty()) {
+                        showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
+                        return;
+                    }
+                    try {
+                        dao.updateComment(item.id, newBody);
+                        current.body = newBody;
+                        exitEditMode(true);
+                    } catch (Exception ex) {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Update failed: " + ex.getMessage());
+                    }
+                });
+                deleteBtn.setOnAction(e -> {
+                    Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete this comment?", ButtonType.YES, ButtonType.NO);
+                    a.setHeaderText(null);
+                    Optional<ButtonType> r = a.showAndWait();
+                    if (r.isPresent() && r.get() == ButtonType.YES) {
+                        try {
+                            dao.deleteComment(item.id);
+                            ((ListView<CommentDto>) getListView()).getItems().remove(item);
+                        } catch (Exception ex) {
+                            showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
+                        }
+                    }
+                });
             }
         });
-
-        TextField authorField = new TextField();
-        authorField.setPromptText("Your name (optional)");
 
         TextArea newCommentArea = new TextArea();
         newCommentArea.setPromptText("Write a comment...");
@@ -303,8 +373,9 @@ public class UC04EditUserStory extends Application {
                 showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
                 return;
             }
+            String author = Optional.ofNullable(UserSession.getCurrentUser()).filter(s -> !s.isBlank()).orElse("Anonymous");
             try {
-                dao.addComment(editingId, emptyToNull(authorField.getText()), body);
+                dao.addComment(editingId, author, body);
                 newCommentArea.clear();
                 refreshComments.run();
             } catch (Exception ex) {
@@ -313,12 +384,11 @@ public class UC04EditUserStory extends Application {
         });
 
         VBox commentsBox = new VBox(8,
-                commentsHeader,
-                commentsList,
-                new Label("Add a comment"),
-                authorField,
-                newCommentArea,
-                addCommentBtn
+            commentsHeader,
+            commentsList,
+            new Label("Add a comment"),
+            newCommentArea,
+            addCommentBtn
         );
         commentsBox.setPadding(new Insets(12));
         commentsBox.setStyle("-fx-background-color:#f9fafb; -fx-background-radius:10; -fx-border-color:#e5e7eb; -fx-border-radius:10;");
@@ -630,6 +700,25 @@ public class UC04EditUserStory extends Application {
                 ps.setString(2, author);
                 ps.setString(3, body);
                 ps.setTimestamp(4, Timestamp.from(Instant.now()));
+                ps.executeUpdate();
+            }
+        }
+
+        public void updateComment(long id, String body) throws SQLException {
+            String sql = "UPDATE comment SET body=? WHERE id=?";
+            try (Connection c = DriverManager.getConnection(JDBC_URL);
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, body);
+                ps.setLong(2, id);
+                ps.executeUpdate();
+            }
+        }
+
+        public void deleteComment(long id) throws SQLException {
+            String sql = "DELETE FROM comment WHERE id=?";
+            try (Connection c = DriverManager.getConnection(JDBC_URL);
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setLong(1, id);
                 ps.executeUpdate();
             }
         }
