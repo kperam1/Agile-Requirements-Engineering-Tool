@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -251,6 +253,76 @@ public class UC04EditUserStory extends Application {
                 assignedHeader, assignedCard
         );
 
+        // Comments Section
+        Label commentsHeader = new Label("Comments");
+        commentsHeader.setStyle("-fx-font-weight: 700; -fx-font-size: 14;");
+
+        ListView<CommentDto> commentsList = new ListView<>();
+        commentsList.setPrefHeight(240);
+        commentsList.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(CommentDto item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                            .format(item.createdAt.atZone(ZoneId.systemDefault()));
+                    String author = Optional.ofNullable(item.author).filter(a -> !a.isBlank()).orElse("Anonymous");
+                    setText(author + " • " + time + "\n" + Optional.ofNullable(item.body).orElse(""));
+                    setStyle("-fx-padding: 8; -fx-control-inner-background: transparent;");
+                }
+            }
+        });
+
+        TextField authorField = new TextField();
+        authorField.setPromptText("Your name (optional)");
+
+        TextArea newCommentArea = new TextArea();
+        newCommentArea.setPromptText("Write a comment...");
+        newCommentArea.setPrefRowCount(2);
+
+        Button addCommentBtn = new Button("Add Comment");
+        addCommentBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding:6 12;");
+
+        Runnable refreshComments = () -> Platform.runLater(() -> {
+            if (editingId <= 0) {
+                commentsList.getItems().clear();
+                return;
+            }
+            List<CommentDto> items = dao.listComments(editingId);
+            commentsList.getItems().setAll(items);
+        });
+
+        refreshComments.run();
+
+        addCommentBtn.setOnAction(e -> {
+            String body = Optional.ofNullable(newCommentArea.getText()).orElse("").trim();
+            if (body.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
+                return;
+            }
+            try {
+                dao.addComment(editingId, emptyToNull(authorField.getText()), body);
+                newCommentArea.clear();
+                refreshComments.run();
+            } catch (Exception ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to add comment: " + ex.getMessage());
+            }
+        });
+
+        VBox commentsBox = new VBox(8,
+                commentsHeader,
+                commentsList,
+                new Label("Add a comment"),
+                authorField,
+                newCommentArea,
+                addCommentBtn
+        );
+        commentsBox.setPadding(new Insets(12));
+        commentsBox.setStyle("-fx-background-color:#f9fafb; -fx-background-radius:10; -fx-border-color:#e5e7eb; -fx-border-radius:10;");
+
         Button deleteBtn = new Button("Delete Task");
         deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #f87171; -fx-text-fill: #ef4444; -fx-background-radius:8; -fx-border-radius:8; -fx-padding:8 14;");
 
@@ -264,8 +336,12 @@ public class UC04EditUserStory extends Application {
         buttonsRow.setPadding(new Insets(12));
         buttonsRow.setAlignment(Pos.CENTER_RIGHT);
 
+        // Layout: left column includes form + comments; right column is meta
+        VBox leftWithComments = new VBox(16, leftColumn, commentsBox);
+        leftWithComments.setPadding(new Insets(12));
+
         BorderPane root = new BorderPane();
-        root.setLeft(leftColumn);
+        root.setCenter(leftWithComments);
         root.setRight(rightColumn);
         root.setBottom(buttonsRow);
 
@@ -418,6 +494,16 @@ public class UC04EditUserStory extends Application {
                             "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                             ")"
                     );
+                    s.executeUpdate(
+                            "CREATE TABLE IF NOT EXISTS comment (" +
+                            "id IDENTITY PRIMARY KEY, " +
+                            "story_id BIGINT NOT NULL, " +
+                            "author VARCHAR(120), " +
+                            "body CLOB NOT NULL, " +
+                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                            "FOREIGN KEY (story_id) REFERENCES user_story(id) ON DELETE CASCADE" +
+                            ")"
+                    );
                 }
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to init DB: " + e.getMessage(), e);
@@ -508,5 +594,52 @@ public class UC04EditUserStory extends Application {
                 ps.executeUpdate();
             }
         }
+
+        // Comments DAO
+        public List<CommentDto> listComments(long storyId) {
+            if (storyId <= 0) return Collections.emptyList();
+            String sql = "SELECT id, author, body, created_at FROM comment WHERE story_id = ? ORDER BY created_at ASC";
+            List<CommentDto> out = new ArrayList<>();
+            try (Connection c = DriverManager.getConnection(JDBC_URL);
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setLong(1, storyId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        CommentDto d = new CommentDto();
+                        d.id = rs.getLong("id");
+                        d.storyId = storyId;
+                        d.author = rs.getString("author");
+                        d.body = rs.getString("body");
+                        Timestamp ts = rs.getTimestamp("created_at");
+                        d.createdAt = ts == null ? Instant.now() : ts.toInstant();
+                        out.add(d);
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return out;
+        }
+
+        public void addComment(long storyId, String author, String body) throws SQLException {
+            if (storyId <= 0) throw new IllegalArgumentException("Invalid story id");
+            String sql = "INSERT INTO comment (story_id, author, body, created_at) VALUES (?, ?, ?, ?)";
+            try (Connection c = DriverManager.getConnection(JDBC_URL);
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setLong(1, storyId);
+                ps.setString(2, author);
+                ps.setString(3, body);
+                ps.setTimestamp(4, Timestamp.from(Instant.now()));
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    public static class CommentDto {
+        public long id;
+        public long storyId;
+        public String author;
+        public String body;
+        public Instant createdAt;
     }
 }
