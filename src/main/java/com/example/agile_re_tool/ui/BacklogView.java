@@ -1,7 +1,6 @@
 package com.example.agile_re_tool.ui;
 
 import com.example.agile_re_tool.UC04EditUserStory;
-import com.example.agile_re_tool.UC03CreateUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,6 +22,8 @@ public class BacklogView {
 
     private VBox backlogList;
 
+    private JSONArray fullData = new JSONArray(); // store original data
+
     public BorderPane getView() {
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
@@ -39,11 +40,6 @@ public class BacklogView {
         Button createBtn = new Button("+ Create Issue");
         Button filterBtn = new Button("Filter");
 
-        createBtn.setOnAction(e -> {
-            UC03CreateUserStory createWindow = new UC03CreateUserStory();
-            createWindow.openWindow();
-        });
-
         HBox header = new HBox(10, title, new Region(), searchField, filterBtn, createBtn);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(0, 0, 20, 0));
@@ -58,6 +54,9 @@ public class BacklogView {
 
         root.setTop(header);
         root.setCenter(scrollPane);
+
+        filterBtn.setOnAction(e -> openFilterDialog());
+        searchField.textProperty().addListener((obs, oldV, newV) -> applySearch(newV));
 
         loadUserStories();
 
@@ -88,48 +87,112 @@ public class BacklogView {
     }
 
     private void updateUI(String json) {
+        fullData = new JSONArray(json); 
+        renderList(fullData);
+    }
+
+    private void renderList(JSONArray data) {
         backlogList.getChildren().clear();
 
-        JSONArray arr = new JSONArray(json);
-
-        if (arr.length() == 0) {
-            Label empty = new Label("No backlog items yet.");
+        if (data.length() == 0) {
+            Label empty = new Label("No backlog items match.");
             empty.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
             empty.setPadding(new Insets(20));
             backlogList.getChildren().add(empty);
             return;
         }
 
-        boolean addedAny = false;
-
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject obj = arr.getJSONObject(i);
-
-            long id = obj.getLong("id");
-            String title = obj.optString("title", "Untitled");
-            String desc = obj.optString("description", "");
-            int points = obj.optInt("storyPoints", 0);
-            String assignee = obj.optString("assignedTo", "");
-            String priority = obj.optString("priority", "Medium");
-            String status = obj.optString("status", "Backlog");
-
-            if (!status.equalsIgnoreCase("Backlog")) {
-                continue;
-            }
-
-            addedAny = true;
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject obj = data.getJSONObject(i);
 
             backlogList.getChildren().add(
-                    createCard(id, title, desc, points, assignee, priority, status)
+                    createCard(
+                            obj.getLong("id"),
+                            obj.optString("title", "Untitled"),
+                            obj.optString("description", ""),
+                            obj.optInt("storyPoints", 0),
+                            obj.optString("assignedTo", ""),
+                            obj.optString("priority", "Medium"),
+                            obj.optString("status", "To Do")
+                    )
             );
         }
+    }
 
-        if (!addedAny) {
-            Label empty = new Label("No backlog items yet.");
-            empty.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
-            empty.setPadding(new Insets(20));
-            backlogList.getChildren().add(empty);
+    private void applySearch(String keyword) {
+        keyword = keyword.toLowerCase();
+
+        JSONArray result = new JSONArray();
+
+        for (int i = 0; i < fullData.length(); i++) {
+            JSONObject obj = fullData.getJSONObject(i);
+
+            String title = obj.optString("title", "").toLowerCase();
+            String desc = obj.optString("description", "").toLowerCase();
+
+            if (title.contains(keyword) || desc.contains(keyword)) {
+                result.put(obj);
+            }
         }
+
+        renderList(result);
+    }
+
+    private void openFilterDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Filter Backlog");
+
+        ComboBox<String> statusBox = new ComboBox<>();
+        statusBox.getItems().addAll("Backlog","All", "To Do", "In Progress", "Done");
+        statusBox.setValue("All");
+
+        ComboBox<String> priorityBox = new ComboBox<>();
+        priorityBox.getItems().addAll("All", "Low", "Medium", "High");
+        priorityBox.setValue("All");
+
+        ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        ButtonType clearBtn = new ButtonType("Clear", ButtonBar.ButtonData.BACK_PREVIOUS);
+
+        dialog.getDialogPane().getButtonTypes().addAll(applyBtn, clearBtn, ButtonType.CANCEL);
+
+        VBox content = new VBox(15,
+                new Label("Status:"), statusBox,
+                new Label("Priority:"), priorityBox
+        );
+        content.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == applyBtn) {
+                applyFilter(statusBox.getValue(), priorityBox.getValue());
+            } else if (btn == clearBtn) {
+                renderList(fullData); 
+            }
+            return null;
+        });
+
+        dialog.showAndWait();
+    }
+
+    private void applyFilter(String status, String priority) {
+        JSONArray filtered = new JSONArray();
+
+        for (int i = 0; i < fullData.length(); i++) {
+            JSONObject obj = fullData.getJSONObject(i);
+
+            boolean matchStatus = status.equals("All") ||
+                    obj.optString("status", "").equalsIgnoreCase(status);
+
+            boolean matchPriority = priority.equals("All") ||
+                    obj.optString("priority", "").equalsIgnoreCase(priority);
+
+            if (matchStatus && matchPriority) {
+                filtered.put(obj);
+            }
+        }
+
+        renderList(filtered);
     }
 
     private VBox createCard(long id, String title, String desc, int points,
@@ -143,13 +206,13 @@ public class BacklogView {
         Label statusBadge = new Label(status);
         statusBadge.setStyle(
                 "-fx-background-color: #eef2ff; -fx-text-fill: #4338ca;" +
-                "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
+                        "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
         );
 
         Label priorityBadge = new Label(priority);
         priorityBadge.setStyle(
                 "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;" +
-                "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
+                        "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
         );
 
         Label titleLabel = new Label(title);
@@ -165,7 +228,7 @@ public class BacklogView {
         Button editBtn = new Button("Edit");
         editBtn.setStyle(
                 "-fx-background-color: #2563eb; -fx-text-fill: white;" +
-                "-fx-padding: 6 14; -fx-background-radius: 8;"
+                        "-fx-padding: 6 14; -fx-background-radius: 8;"
         );
 
         editBtn.setOnAction(e -> {
@@ -183,11 +246,11 @@ public class BacklogView {
         card.setPadding(new Insets(15));
         card.setStyle(
                 "-fx-background-color: #ffffff;" +
-                "-fx-background-radius: 12;" +
-                "-fx-border-radius: 12;" +
-                "-fx-border-color: #e5e7eb;" +
-                "-fx-border-width: 1;" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);"
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-border-color: #e5e7eb;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);"
         );
 
         return card;
