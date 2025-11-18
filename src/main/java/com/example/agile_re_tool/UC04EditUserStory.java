@@ -359,8 +359,12 @@ public class UC04EditUserStory extends Application {
         Runnable refreshComments = () -> Platform.runLater(() -> {
             if (editingId <= 0) {
                 commentsList.getItems().clear();
+                newCommentArea.setDisable(true);
+                addCommentBtn.setDisable(true);
                 return;
             }
+            newCommentArea.setDisable(false);
+            addCommentBtn.setDisable(false);
             List<CommentDto> items = dao.listComments(editingId);
             commentsList.getItems().setAll(items);
         });
@@ -368,6 +372,10 @@ public class UC04EditUserStory extends Application {
         refreshComments.run();
 
         addCommentBtn.setOnAction(e -> {
+            if (editingId <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Save First", "Please save the story before adding comments.");
+                return;
+            }
             String body = Optional.ofNullable(newCommentArea.getText()).orElse("").trim();
             if (body.isEmpty()) {
                 showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
@@ -380,6 +388,7 @@ public class UC04EditUserStory extends Application {
                 refreshComments.run();
             } catch (Exception ex) {
                 showAlert(Alert.AlertType.ERROR, "Error", "Failed to add comment: " + ex.getMessage());
+                ex.printStackTrace();
             }
         });
 
@@ -545,6 +554,15 @@ public class UC04EditUserStory extends Application {
     public static class UserStoryDao {
         private static final String JDBC_URL = "jdbc:h2:./data/agile;AUTO_SERVER=TRUE";
 
+        static {
+            try {
+                Class.forName("org.h2.Driver");
+                initDatabase();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("H2 Driver not found", e);
+            }
+        }
+
         static void initDatabase() {
             try (Connection c = DriverManager.getConnection(JDBC_URL)) {
                 try (Statement s = c.createStatement()) {
@@ -570,8 +588,7 @@ public class UC04EditUserStory extends Application {
                             "story_id BIGINT NOT NULL, " +
                             "author VARCHAR(120), " +
                             "body CLOB NOT NULL, " +
-                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-                            "FOREIGN KEY (story_id) REFERENCES user_story(id) ON DELETE CASCADE" +
+                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                             ")"
                     );
                 }
