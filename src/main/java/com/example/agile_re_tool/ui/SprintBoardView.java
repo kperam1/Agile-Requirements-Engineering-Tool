@@ -29,6 +29,7 @@ public class SprintBoardView {
 
     private final VBox todoColumn = buildColumn("To Do");
     private final VBox inProgressColumn = buildColumn("In Progress");
+    private final VBox testingColumn = buildColumn("Testing");
     private final VBox doneColumn = buildColumn("Done");
 
     public BorderPane getView() {
@@ -48,9 +49,10 @@ public class SprintBoardView {
         header.setPadding(new Insets(0,0,16,0));
 
         HBox columns = new HBox(16,
-                wrapScrollable(todoColumn),
-                wrapScrollable(inProgressColumn),
-                wrapScrollable(doneColumn));
+            wrapScrollable(todoColumn),
+            wrapScrollable(inProgressColumn),
+            wrapScrollable(testingColumn),
+            wrapScrollable(doneColumn));
         columns.setPrefHeight(600);
         columns.setAlignment(Pos.TOP_LEFT);
 
@@ -82,6 +84,7 @@ public class SprintBoardView {
     private void loadStories() {
         todoColumn.getChildren().retainAll(todoColumn.getChildren().get(0));
         inProgressColumn.getChildren().retainAll(inProgressColumn.getChildren().get(0));
+        testingColumn.getChildren().retainAll(testingColumn.getChildren().get(0));
         doneColumn.getChildren().retainAll(doneColumn.getChildren().get(0));
 
         new Thread(() -> {
@@ -127,6 +130,7 @@ public class SprintBoardView {
             VBox card = buildCard(id,title,desc,status,assignee,points);
             switch (status) {
                 case "In Progress" -> inProgressColumn.getChildren().add(card);
+                case "Testing" -> testingColumn.getChildren().add(card);
                 case "Done" -> doneColumn.getChildren().add(card);
                 default -> todoColumn.getChildren().add(card);
             }
