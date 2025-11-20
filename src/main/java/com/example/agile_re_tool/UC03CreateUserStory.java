@@ -139,24 +139,41 @@ public class UC03CreateUserStory extends Application {
         grid.add(new Label("Priority"), 0, r); grid.add(priorityCombo, 1, r++);
         grid.add(new Label("Status"), 0, r); grid.add(statusCombo, 1, r++);
 
+        ToggleButton sprintToggle = new ToggleButton("Sprint Ready");
+        sprintToggle.setFocusTraversable(false);
+        sprintToggle.setSelected(false);
+        sprintToggle.setTooltip(new Tooltip("Mark story as sprint-ready"));
+        sprintToggle.getStyleClass().add("sprint-toggle");
+
         Button cancelBtn = new Button("Cancel");
         Button addBtn = new Button("Add Task");
-        cancelBtn.getStyleClass().add("button-cancel");
-        addBtn.getStyleClass().add("button-primary");
+        cancelBtn.getStyleClass().addAll("button", "cancel");
+        addBtn.getStyleClass().addAll("button", "primary");
         addBtn.setDefaultButton(true);
         cancelBtn.setCancelButton(true);
 
-        HBox buttons = new HBox(10, cancelBtn, addBtn);
+        HBox buttons = new HBox(10, sprintToggle, cancelBtn, addBtn);
         buttons.setAlignment(Pos.CENTER_RIGHT);
         buttons.setPadding(new Insets(8, 0, 0, 0));
 
         Label heading = new Label("Add New Story");
-        heading.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        heading.getStyleClass().add("heading");
+
+        ToggleButton mvpToggle = new ToggleButton("MVP");
+        mvpToggle.setFocusTraversable(false);
+        mvpToggle.setSelected(false);
+        mvpToggle.setTooltip(new Tooltip("Toggle MVP view"));
+        mvpToggle.getStyleClass().add("mvp-toggle");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox headerBox = new HBox(8, heading, spacer, mvpToggle);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
 
         Label subText = new Label("Create a new story for the selected idea. Fill in the details below.");
         subText.getStyleClass().add("subtext");
 
-        VBox root = new VBox(12, heading, subText, grid, buttons);
+        VBox root = new VBox(12, headerBox, subText, grid, buttons);
         root.setPadding(new Insets(16));
         root.setPrefWidth(760);
 
@@ -175,6 +192,8 @@ public class UC03CreateUserStory extends Application {
             dto.acceptanceCriteria = emptyToNull(acceptanceArea.getText());
             dto.assignee = assigneeCombo.getValue();
             dto.estimateType = estimateTypeCombo.getValue();
+            dto.isSprintReady = sprintToggle.isSelected();
+            dto.isMvp = mvpToggle.isSelected();
 
             if ("Story Points".equals(dto.estimateType)) {
                 dto.storyPoints = pointsCombo.getValue();
@@ -327,6 +346,8 @@ public class UC03CreateUserStory extends Application {
         public String timeEstimate;  
         public String priority;
         public String status;
+        public boolean isMvp;
+        public boolean isSprintReady;
     }
 
     public static class UserStoryDao {
@@ -348,9 +369,27 @@ public class UC03CreateUserStory extends Application {
                         "time_estimate VARCHAR(120), " +
                         "priority VARCHAR(50), " +
                         "status VARCHAR(50), " +
+                        "is_sprint_ready BOOLEAN DEFAULT FALSE, " +
+                        "is_mvp BOOLEAN DEFAULT FALSE, " +
                         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                         ")"
                     );
+                    try {
+                        s.executeUpdate("ALTER TABLE user_story ADD COLUMN IF NOT EXISTS is_mvp BOOLEAN DEFAULT FALSE");
+                    } catch (SQLException ignored) {
+                        try {
+                            s.executeUpdate("ALTER TABLE user_story ADD COLUMN is_mvp BOOLEAN DEFAULT FALSE");
+                        } catch (SQLException ignored2) {
+                        }
+                    }
+                    try {
+                        s.executeUpdate("ALTER TABLE user_story ADD COLUMN IF NOT EXISTS is_sprint_ready BOOLEAN DEFAULT FALSE");
+                    } catch (SQLException ignored3) {
+                        try {
+                            s.executeUpdate("ALTER TABLE user_story ADD COLUMN IF NOT EXISTS is_sprint_ready BOOLEAN DEFAULT FALSE");
+                        } catch (SQLException ignored4) {
+                        }
+                    }
                 }
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to init DB: " + e.getMessage(), e);
@@ -358,8 +397,8 @@ public class UC03CreateUserStory extends Application {
         }
 
         public long create(CreateStoryDto dto) throws SQLException {
-            String sql = "INSERT INTO user_story (title, description, acceptance_criteria, assignee, estimate_type, story_points, size, time_estimate, priority, status, created_at) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO user_story (title, description, acceptance_criteria, assignee, estimate_type, story_points, size, time_estimate, priority, status, is_sprint_ready, is_mvp, created_at) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (Connection c = DriverManager.getConnection(JDBC_URL);
                  PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -373,7 +412,9 @@ public class UC03CreateUserStory extends Application {
                 ps.setString(8, dto.timeEstimate);
                 ps.setString(9, dto.priority);
                 ps.setString(10, dto.status);
-                ps.setTimestamp(11, Timestamp.from(Instant.now()));
+                ps.setBoolean(11, dto.isSprintReady);
+                ps.setBoolean(12, dto.isMvp);
+                ps.setTimestamp(13, Timestamp.from(Instant.now()));
 
                 int affected = ps.executeUpdate();
                 if (affected == 0) throw new SQLException("Insert failed, no rows affected.");

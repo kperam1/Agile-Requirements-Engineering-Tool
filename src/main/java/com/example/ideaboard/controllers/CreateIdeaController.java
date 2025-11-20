@@ -31,7 +31,7 @@ public class CreateIdeaController {
             "Research",
             "Other"
         );
-        categoryChoice.setValue("Product Enhancement"); // Default value
+        categoryChoice.setValue("Product Enhancement");
 
         statusChoice.getItems().addAll(
             "New",
@@ -41,7 +41,7 @@ public class CreateIdeaController {
             "Completed",
             "Rejected"
         );
-        statusChoice.setValue("New"); // Default value
+        statusChoice.setValue("New");
     }
 
     @FXML
