@@ -134,26 +134,76 @@ public class SprintBoardView {
     }
 
     private VBox buildCard(long id, String title, String desc, String status, String assignee, int points) {
-        Circle avatar = new Circle(16, Color.web("#e0f2fe"));
+        // Avatar
+        Circle avatar = new Circle(20, Color.web("#e0f2fe"));
         Text initials = new Text(getInitials(assignee));
-        initials.setStyle("-fx-font-weight:700; -fx-fill:#0369a1;");
+        initials.setStyle("-fx-font-weight:700; -fx-fill:#0369a1; -fx-font-size:12px;");
         StackPane avatarPane = new StackPane(avatar, initials);
 
+        // Title
         Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size:14px; -fx-font-weight:600; -fx-text-fill:#111827;");
-        Label descLbl = new Label(desc);
-        descLbl.setWrapText(true);
-        descLbl.setStyle("-fx-text-fill:#6b7280; -fx-font-size:12px;");
-        Label pointsLbl = new Label("SP: " + points);
-        pointsLbl.setStyle("-fx-text-fill:#374151; -fx-font-size:11px;");
+        titleLbl.setStyle("-fx-font-size:15px; -fx-font-weight:700; -fx-text-fill:#111827;");
+        titleLbl.setWrapText(true);
+        titleLbl.setMaxWidth(260);
 
+        // Description
+        Label descLbl = new Label(desc.length() > 100 ? desc.substring(0, 100) + "..." : desc);
+        descLbl.setWrapText(true);
+        descLbl.setMaxWidth(260);
+        descLbl.setStyle("-fx-text-fill:#6b7280; -fx-font-size:13px;");
+
+        // Story Points Badge
+        Label pointsBadge = new Label("SP: " + points);
+        pointsBadge.setStyle(
+            "-fx-background-color:#dbeafe; -fx-text-fill:#1e40af; " +
+            "-fx-padding:4 10; -fx-background-radius:12; -fx-font-size:11px; -fx-font-weight:600;"
+        );
+
+        // Assignee Label
+        Label assigneeLbl = new Label(assignee.isEmpty() ? "Unassigned" : assignee);
+        assigneeLbl.setStyle("-fx-text-fill:#6b7280; -fx-font-size:12px;");
+
+        // Edit Button
         Button editBtn = new Button("Edit");
-        editBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:6; -fx-padding:4 10; -fx-font-size:11px;");
+        editBtn.setStyle(
+            "-fx-background-color:#2563eb; -fx-text-fill:white; " +
+            "-fx-background-radius:8; -fx-padding:6 14; -fx-font-size:12px; -fx-cursor:hand;"
+        );
         editBtn.setOnAction(e -> new UC04EditUserStory(id).openWindow());
 
-        VBox card = new VBox(4,new HBox(8, avatarPane, titleLbl), descLbl, new HBox(6, pointsLbl, editBtn));
-        card.setPadding(new Insets(10));
-        card.setStyle("-fx-background-color:#ffffff; -fx-background-radius:10; -fx-border-color:#e5e7eb; -fx-border-radius:10; -fx-border-width:1;");
+        // Header with avatar and title
+        HBox header = new HBox(10, avatarPane, titleLbl);
+        header.setAlignment(Pos.TOP_LEFT);
+
+        // Footer with points and assignee
+        HBox footer = new HBox(10, pointsBadge, new Region(), assigneeLbl);
+        footer.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(footer.getChildren().get(1), Priority.ALWAYS);
+
+        // Card container
+        VBox card = new VBox(10, header, descLbl, footer, editBtn);
+        card.setPadding(new Insets(14));
+        card.setStyle(
+            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-cursor:hand;"
+        );
+
+        // Hover effect
+        card.setOnMouseEntered(e -> card.setStyle(
+            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+            "-fx-border-color:#3b82f6; -fx-border-radius:12; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3); " +
+            "-fx-cursor:hand;"
+        ));
+        card.setOnMouseExited(e -> card.setStyle(
+            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-cursor:hand;"
+        ));
+
         return card;
     }
 
