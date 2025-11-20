@@ -21,8 +21,7 @@ import java.net.http.HttpResponse;
 public class BacklogView {
 
     private VBox backlogList;
-
-    private JSONArray fullData = new JSONArray(); // store original data
+    private JSONArray fullData = new JSONArray();
 
     public BorderPane getView() {
         BorderPane root = new BorderPane();
@@ -59,7 +58,6 @@ public class BacklogView {
         searchField.textProperty().addListener((obs, oldV, newV) -> applySearch(newV));
 
         loadUserStories();
-
         return root;
     }
 
@@ -67,15 +65,12 @@ public class BacklogView {
         new Thread(() -> {
             try {
                 HttpClient client = HttpClient.newHttpClient();
-
                 HttpRequest req = HttpRequest.newBuilder()
                         .uri(URI.create("http://localhost:8080/api/userstories"))
                         .GET()
                         .build();
 
-                HttpResponse<String> response =
-                        client.send(req, HttpResponse.BodyHandlers.ofString());
-
+                HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> updateUI(response.body()));
                 }
@@ -87,7 +82,7 @@ public class BacklogView {
     }
 
     private void updateUI(String json) {
-        fullData = new JSONArray(json); 
+        fullData = new JSONArray(json);
         renderList(fullData);
     }
 
@@ -104,7 +99,6 @@ public class BacklogView {
 
         for (int i = 0; i < data.length(); i++) {
             JSONObject obj = data.getJSONObject(i);
-
             backlogList.getChildren().add(
                     createCard(
                             obj.getLong("id"),
@@ -120,7 +114,13 @@ public class BacklogView {
     }
 
     private void applySearch(String keyword) {
-        keyword = keyword.toLowerCase();
+        if (keyword == null) keyword = "";
+        keyword = keyword.toLowerCase().trim();
+
+        if (keyword.isEmpty()) {
+            renderList(fullData);
+            return;
+        }
 
         JSONArray result = new JSONArray();
 
@@ -129,10 +129,20 @@ public class BacklogView {
 
             String title = obj.optString("title", "").toLowerCase();
             String desc = obj.optString("description", "").toLowerCase();
+            String assignee = obj.optString("assignedTo", "").toLowerCase();
+            String priority = obj.optString("priority", "").toLowerCase();
+            String status = obj.optString("status", "").toLowerCase();
+            String points = String.valueOf(obj.optInt("storyPoints", 0));
 
-            if (title.contains(keyword) || desc.contains(keyword)) {
-                result.put(obj);
-            }
+            boolean match =
+                    title.contains(keyword) ||
+                            desc.contains(keyword) ||
+                            assignee.contains(keyword) ||
+                            priority.contains(keyword) ||
+                            status.contains(keyword) ||
+                            points.contains(keyword);
+
+            if (match) result.put(obj);
         }
 
         renderList(result);
@@ -143,7 +153,7 @@ public class BacklogView {
         dialog.setTitle("Filter Backlog");
 
         ComboBox<String> statusBox = new ComboBox<>();
-        statusBox.getItems().addAll("Backlog","All", "To Do", "In Progress", "Done");
+        statusBox.getItems().addAll("All", "To Do", "In Progress", "Done");
         statusBox.setValue("All");
 
         ComboBox<String> priorityBox = new ComboBox<>();
@@ -164,11 +174,8 @@ public class BacklogView {
         dialog.getDialogPane().setContent(content);
 
         dialog.setResultConverter(btn -> {
-            if (btn == applyBtn) {
-                applyFilter(statusBox.getValue(), priorityBox.getValue());
-            } else if (btn == clearBtn) {
-                renderList(fullData); 
-            }
+            if (btn == applyBtn) applyFilter(statusBox.getValue(), priorityBox.getValue());
+            else if (btn == clearBtn) renderList(fullData);
             return null;
         });
 
@@ -187,9 +194,7 @@ public class BacklogView {
             boolean matchPriority = priority.equals("All") ||
                     obj.optString("priority", "").equalsIgnoreCase(priority);
 
-            if (matchStatus && matchPriority) {
-                filtered.put(obj);
-            }
+            if (matchStatus && matchPriority) filtered.put(obj);
         }
 
         renderList(filtered);
