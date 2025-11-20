@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.agile.requirements.controller.SignupControllerApi"
+            fitToWidth="true"
+            stylesheets="/css/auth.css">
+    <content>
+        <VBox spacing="10" alignment="TOP_CENTER" prefWidth="420">
+            <children>
+                <Label text="Create Account" styleClass="form-title" />
+                <GridPane hgap="10" vgap="8">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50" />
+                        <ColumnConstraints percentWidth="50" />
+                    </columnConstraints>
+                    <children>
+                        <Label text="First Name" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <TextField fx:id="firstNameField" promptText="First" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label text="Last Name" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <TextField fx:id="lastNameField" promptText="Last" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Label text="Email" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <TextField fx:id="emailField" promptText="email@example.com" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+                        <Label text="Username" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                        <TextField fx:id="usernameField" promptText="username" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+                        <Label text="Password" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                        <PasswordField fx:id="passwordField" promptText="Password" GridPane.rowIndex="7" GridPane.columnIndex="0" />
+                        <Label text="Confirm" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                        <PasswordField fx:id="confirmPasswordField" promptText="Confirm" GridPane.rowIndex="7" GridPane.columnIndex="1" />
+                        <Label text="Role" GridPane.rowIndex="8" GridPane.columnIndex="0" />
+                        <ComboBox fx:id="roleComboBox" GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+                    </children>
+                </GridPane>
+                <Button fx:id="signupButton" text="Sign Up" onAction="#handleSignup"
+                        styleClass="primary-button" maxWidth="Infinity" />
+                <Hyperlink fx:id="loginLink" text="Already have an account? Log in"
+                           onAction="#handleLoginLink" />
+                <Label fx:id="messageLabel" text="" styleClass="message-label" wrapText="true" />
+            </children>
+            <padding><Insets top="25" left="25" right="25" bottom="25"/></padding>
+        </VBox>
+    </content>
+</ScrollPane>

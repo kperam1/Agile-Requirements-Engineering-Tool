@@ -1,0 +1,70 @@
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: #fafafa;
+}
+
+.text-field {
+    -fx-background-radius: 6;
+    -fx-border-color: #ddd;
+    -fx-padding: 6;
+}
+
+.list-view {
+    -fx-background-color: #fff;
+    -fx-border-color: #ddd;
+    -fx-background-radius: 8;
+}
+
+.idea-row {
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e5e5e5;
+    -fx-border-width: 0 0 1 0;
+}
+
+.idea-row:hover {
+    -fx-background-color: #f4f8ff;
+}
+
+.row-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #222;
+}
+
+.row-category {
+    -fx-font-size: 12px;
+    -fx-text-fill: #555;
+}
+
+.row-snippet {
+    -fx-font-size: 11px;
+    -fx-text-fill: #777;
+}
+
+.badge {
+    -fx-padding: 3 8;
+    -fx-background-radius: 6;
+    -fx-text-fill: #fff;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-new { -fx-background-color: #2196F3; }
+.badge-under-review, .badge-review { -fx-background-color: #ff9800; }
+.badge-approved { -fx-background-color: #4CAF50; }
+.badge-rejected { -fx-background-color: #f44336; }
+
+.toast-notification {
+    -fx-background-color: rgba(0,0,0,0.8);
+    -fx-background-radius: 8;
+    -fx-padding: 10 20;
+}
+
+.toast-text {
+    -fx-fill: #fff;
+    -fx-font-size: 13px;
+}
+
+.toast-success { -fx-background-color: #4CAF50; }
+.toast-error   { -fx-background-color: #f44336; }

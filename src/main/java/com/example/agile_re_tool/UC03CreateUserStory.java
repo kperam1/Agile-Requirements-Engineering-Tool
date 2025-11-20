@@ -12,14 +12,16 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.*;
-import java.time.Instant;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class UC03CreateUserStory extends Application {
+import org.json.JSONObject;
 
-    private final UserStoryDao dao = new UserStoryDao();
+public class UC03CreateUserStory extends Application {
 
     private List<String> assignees = List.of();
     private List<String> estimateTypes = List.of();
@@ -34,7 +36,6 @@ public class UC03CreateUserStory extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("UC-03 - Create User Story");
 
-        dao.initDatabase();
         loadConfig();
 
         TextField titleField = new TextField();
@@ -65,7 +66,6 @@ public class UC03CreateUserStory extends Application {
                 }
             }
         });
-        assigneeCombo.getSelectionModel().clearSelection();
 
         ComboBox<String> estimateTypeCombo = new ComboBox<>();
         estimateTypeCombo.getItems().setAll(estimateTypes);
@@ -75,17 +75,11 @@ public class UC03CreateUserStory extends Application {
         ComboBox<Integer> pointsCombo = new ComboBox<>();
         pointsCombo.getItems().setAll(FIBONACCI_POINTS);
         pointsCombo.setPromptText("Story Points");
-        pointsCombo.setMaxWidth(Double.MAX_VALUE);
- 
-        if (FIBONACCI_POINTS.contains(defaultStoryPoints)) {
-            pointsCombo.getSelectionModel().select((Integer) defaultStoryPoints);
-        } else {
-            pointsCombo.getSelectionModel().clearSelection();
-        }
 
         ComboBox<String> tshirtCombo = new ComboBox<>();
         tshirtCombo.getItems().setAll(tshirtSizes);
         tshirtCombo.setPromptText("T-shirt size");
+
         TextField timeEstimateField = new TextField();
         timeEstimateField.setPromptText("e.g., 4 hours, 2 days");
 
@@ -118,15 +112,6 @@ public class UC03CreateUserStory extends Application {
         c1.setHgrow(Priority.ALWAYS);
         c1.setFillWidth(true);
         grid.getColumnConstraints().addAll(c0, c1);
-
-        titleField.setMaxWidth(Double.MAX_VALUE);
-        descriptionArea.setMaxWidth(Double.MAX_VALUE);
-        acceptanceArea.setMaxWidth(Double.MAX_VALUE);
-        estimateTypeCombo.setMaxWidth(Double.MAX_VALUE);
-        tshirtCombo.setMaxWidth(Double.MAX_VALUE);
-        timeEstimateField.setMaxWidth(Double.MAX_VALUE);
-        priorityCombo.setMaxWidth(Double.MAX_VALUE);
-        statusCombo.setMaxWidth(Double.MAX_VALUE);
 
         int r = 0;
         grid.add(new Label("Task Title *"), 0, r); grid.add(titleField, 1, r++);
@@ -186,55 +171,78 @@ public class UC03CreateUserStory extends Application {
                 return;
             }
 
-            CreateStoryDto dto = new CreateStoryDto();
-            dto.title = title.trim();
-            dto.description = emptyToNull(descriptionArea.getText());
-            dto.acceptanceCriteria = emptyToNull(acceptanceArea.getText());
-            dto.assignee = assigneeCombo.getValue();
-            dto.estimateType = estimateTypeCombo.getValue();
-            dto.isMvp = mvpToggle.isSelected();
+            String description = descriptionArea.getText();
+            String acceptance = acceptanceArea.getText();
+            String assignedTo = assigneeCombo.getValue();
+            String priority = priorityCombo.getValue();
+            String status = statusCombo.getValue();
+            String estimateType = estimateTypeCombo.getValue();
 
-            if ("Story Points".equals(dto.estimateType)) {
-                dto.storyPoints = pointsCombo.getValue();
-            } else {
-                dto.storyPoints = null;
-            }
-            if ("T-shirt Sizes".equals(dto.estimateType)) {
-                dto.size = tshirtCombo.getValue();
-            } else {
-                dto.size = null;
-            }
-            if ("Time".equals(dto.estimateType)) {
-                dto.timeEstimate = emptyToNull(timeEstimateField.getText());
-            } else {
-                dto.timeEstimate = null;
+            int storyPoints = defaultStoryPoints;
+            if ("Story Points".equals(estimateType) && pointsCombo.getValue() != null) {
+                storyPoints = pointsCombo.getValue();
+            } else if ("T-shirt Sizes".equals(estimateType) && tshirtCombo.getValue() != null) {
+                switch (tshirtCombo.getValue()) {
+                    case "XS" -> storyPoints = 1;
+                    case "S"  -> storyPoints = 2;
+                    case "M"  -> storyPoints = 3;
+                    case "L"  -> storyPoints = 5;
+                    case "XL" -> storyPoints = 8;
+                }
             }
 
-            dto.priority = priorityCombo.getValue();
-            dto.status = statusCombo.getValue();
+            JSONObject json = new JSONObject();
+            json.put("title", title);
+            json.put("description", description);
+            json.put("acceptanceCriteria", acceptance);
+            json.put("assignedTo", assignedTo);
+            json.put("priority", priority);
+            json.put("status", status);
+            json.put("storyPoints", storyPoints);
 
-            try {
-                long id = dao.create(dto);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "User story created (id=" + id + ")");
+            new Thread(() -> {
+                try {
+                    HttpClient client = HttpClient.newHttpClient();
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create("http://localhost:8080/api/userstories"))
+                            .header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                            .build();
 
-                titleField.clear();
-                descriptionArea.clear();
-                acceptanceArea.clear();
-                assigneeCombo.getSelectionModel().clearSelection();
-                pointsCombo.getSelectionModel().clearSelection();
-                tshirtCombo.getSelectionModel().clearSelection();
-                timeEstimateField.clear();
-                priorityCombo.getSelectionModel().select(defaultPriority);
-                statusCombo.getSelectionModel().select(defaultStatus);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "DB Error", ex.getMessage());
-            }
+                    HttpResponse<String> response =
+                            client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        showAlert(Alert.AlertType.INFORMATION, "Success",
+                                "User story created successfully and saved to database.");
+
+                        Platform.runLater(() -> {
+                            titleField.clear();
+                            descriptionArea.clear();
+                            acceptanceArea.clear();
+                            assigneeCombo.getSelectionModel().clearSelection();
+                            pointsCombo.getSelectionModel().clearSelection();
+                            tshirtCombo.getSelectionModel().clearSelection();
+                            timeEstimateField.clear();
+                            priorityCombo.getSelectionModel().select(defaultPriority);
+                            statusCombo.getSelectionModel().select(defaultStatus);
+                        });
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Error",
+                                "Server error (" + response.statusCode() + ") while saving user story.");
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, "Error",
+                            "Could not connect to backend: " + ex.getMessage());
+                }
+            }).start();
         });
 
         Scene scene = new Scene(root);
         try {
-            String css = Optional.ofNullable(getClass().getResource("/uc03-style.css")).map(u -> u.toExternalForm()).orElse(null);
+            String css = Optional.ofNullable(getClass().getResource("/uc03-style.css"))
+                    .map(u -> u.toExternalForm()).orElse(null);
             if (css != null) scene.getStylesheets().add(css);
         } catch (Exception ignored) {}
 
@@ -242,82 +250,41 @@ public class UC03CreateUserStory extends Application {
         primaryStage.show();
     }
 
-    private void updateEstimateControls(HBox container, String mode, ComboBox<Integer> pointsCombo, ComboBox<String> tshirtCombo, TextField timeEstimateField) {
+    private void updateEstimateControls(HBox container, String mode,
+                                        ComboBox<Integer> pointsCombo,
+                                        ComboBox<String> tshirtCombo,
+                                        TextField timeEstimateField) {
         container.getChildren().clear();
         if (mode == null) return;
         switch (mode) {
-            case "Story Points":
-                Label spLabel = new Label("Story Points:");
-                spLabel.setMinWidth(90);
-                container.getChildren().addAll(spLabel, pointsCombo);
-                break;
-            case "T-shirt Sizes":
-                Label sizeLabel = new Label("Size:");
-                sizeLabel.setMinWidth(90);
-                container.getChildren().addAll(sizeLabel, tshirtCombo);
-                break;
-            case "Time":
-                Label timeLabel = new Label("Time Estimate:");
-                timeLabel.setMinWidth(90);
-                container.getChildren().addAll(timeLabel, timeEstimateField);
-                break;
-            default:
-                
-                break;
+            case "Story Points" -> container.getChildren().addAll(new Label("Story Points:"), pointsCombo);
+            case "T-shirt Sizes" -> container.getChildren().addAll(new Label("Size:"), tshirtCombo);
+            case "Time" -> container.getChildren().addAll(new Label("Time Estimate:"), timeEstimateField);
         }
     }
 
-    
     private void loadConfig() {
         Properties p = new Properties();
         try (InputStream in = getClass().getResourceAsStream("/uc-config.properties")) {
-            if (in != null) {
-                p.load(in);
-                System.out.println("Loaded config from /uc-config.properties");
-            } else {
-                System.out.println("uc-config.properties not found on classpath; using defaults.");
-            }
-        } catch (IOException e) {
-            System.out.println("Failed to read uc-config.properties: " + e.getMessage());
-        }
+            if (in != null) p.load(in);
+        } catch (IOException ignored) {}
 
         String a = p.getProperty("assignees");
         if (a != null && !a.isBlank()) {
             assignees = Arrays.stream(a.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toList());
+                    .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
         }
+        if (assignees.isEmpty()) assignees = List.of("Alice", "Bob", "Charlie");
 
         String et = p.getProperty("estimate.types");
-        if (et != null && !et.isBlank()) {
-            estimateTypes = Arrays.stream(et.split(",")).map(String::trim).collect(Collectors.toList());
-        } else if (estimateTypes.isEmpty()) {
-            estimateTypes = List.of("Story Points", "T-shirt Sizes", "Time");
-        }
+        estimateTypes = (et != null && !et.isBlank())
+                ? Arrays.stream(et.split(",")).map(String::trim).toList()
+                : List.of("Story Points", "T-shirt Sizes", "Time");
 
         String ts = p.getProperty("tshirt.sizes");
-        if (ts != null && !ts.isBlank()) {
-            tshirtSizes = Arrays.stream(ts.split(",")).map(String::trim).collect(Collectors.toList());
-        } else if (tshirtSizes.isEmpty()) {
-            tshirtSizes = List.of("XS","S","M","L","XL","XXL");
-        }
-
-        String sp = p.getProperty("default.story.points");
-        if (sp != null) {
-            try { defaultStoryPoints = Integer.parseInt(sp.trim()); } catch (NumberFormatException ignored) {}
-        }
-
-        defaultPriority = Optional.ofNullable(p.getProperty("default.priority")).orElse(defaultPriority);
-        defaultStatus = Optional.ofNullable(p.getProperty("default.status")).orElse(defaultStatus);
-
-        System.out.println("Assignees loaded: " + assignees);
-    }
-
-    private static String emptyToNull(String s) {
-        if (s == null) return null;
-        s = s.trim();
-        return s.isEmpty() ? null : s;
+        tshirtSizes = (ts != null && !ts.isBlank())
+                ? Arrays.stream(ts.split(",")).map(String::trim).toList()
+                : List.of("XS", "S", "M", "L", "XL");
     }
 
     private void showAlert(Alert.AlertType t, String title, String body) {
@@ -331,86 +298,5 @@ public class UC03CreateUserStory extends Application {
 
     public static void main(String[] args) {
         launch();
-    }
-
-   
-    public static class CreateStoryDto {
-        public String title;
-        public String description;
-        public String acceptanceCriteria;
-        public String assignee;
-        public String estimateType;
-        public Integer storyPoints;
-        public String size;          
-        public String timeEstimate;  
-        public String priority;
-        public String status;
-        public boolean isMvp;
-    }
-
-    public static class UserStoryDao {
-        private static final String JDBC_URL = "jdbc:h2:./data/agile;AUTO_SERVER=TRUE";
-
-        static void initDatabase() {
-            try (Connection c = DriverManager.getConnection(JDBC_URL)) {
-                try (Statement s = c.createStatement()) {
-                    s.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS user_story (" +
-                        "id IDENTITY PRIMARY KEY, " +
-                        "title VARCHAR(255) NOT NULL, " +
-                        "description CLOB, " +
-                        "acceptance_criteria CLOB, " +
-                        "assignee VARCHAR(120), " +
-                        "estimate_type VARCHAR(50), " +
-                        "story_points INT, " +
-                        "size VARCHAR(20), " +
-                        "time_estimate VARCHAR(120), " +
-                        "priority VARCHAR(50), " +
-                        "status VARCHAR(50), " +
-                        "is_mvp BOOLEAN DEFAULT FALSE, " +
-                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                        ")"
-                    );
-                    try {
-                        s.executeUpdate("ALTER TABLE user_story ADD COLUMN IF NOT EXISTS is_mvp BOOLEAN DEFAULT FALSE");
-                    } catch (SQLException ignored) {
-                        try {
-                            s.executeUpdate("ALTER TABLE user_story ADD COLUMN is_mvp BOOLEAN DEFAULT FALSE");
-                        } catch (SQLException ignored2) {
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to init DB: " + e.getMessage(), e);
-            }
-        }
-
-        public long create(CreateStoryDto dto) throws SQLException {
-            String sql = "INSERT INTO user_story (title, description, acceptance_criteria, assignee, estimate_type, story_points, size, time_estimate, priority, status, is_mvp, created_at) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-                ps.setString(1, dto.title);
-                ps.setString(2, dto.description);
-                ps.setString(3, dto.acceptanceCriteria);
-                ps.setString(4, dto.assignee);
-                ps.setString(5, dto.estimateType);
-                if (dto.storyPoints == null) ps.setNull(6, Types.INTEGER); else ps.setInt(6, dto.storyPoints);
-                ps.setString(7, dto.size);
-                ps.setString(8, dto.timeEstimate);
-                ps.setString(9, dto.priority);
-                ps.setString(10, dto.status);
-                ps.setBoolean(11, dto.isMvp);
-                ps.setTimestamp(12, Timestamp.from(Instant.now()));
-
-                int affected = ps.executeUpdate();
-                if (affected == 0) throw new SQLException("Insert failed, no rows affected.");
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) return rs.getLong(1);
-                    throw new SQLException("Insert succeeded but no ID obtained.");
-                }
-            }
-        }
     }
 }

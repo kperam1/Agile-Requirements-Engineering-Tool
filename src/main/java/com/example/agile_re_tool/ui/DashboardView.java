@@ -1,26 +1,42 @@
 package com.example.agile_re_tool.ui;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import com.example.agile_re_tool.UC03CreateUserStory;
 
 public class DashboardView {
 
-    private final StringProperty totalIdeas = new SimpleStringProperty("42");
-    private final StringProperty userStories = new SimpleStringProperty("28");
-    private final StringProperty sprintReady = new SimpleStringProperty("15");
-    private final StringProperty teamVelocity = new SimpleStringProperty("32");
+    private final StringProperty totalIdeas = new SimpleStringProperty("0");
+    private final StringProperty userStories = new SimpleStringProperty("0");
+    private final StringProperty sprintReady = new SimpleStringProperty("0");
+    private final StringProperty teamVelocity = new SimpleStringProperty("0");
+
+    public DashboardView() {
+        loadDashboardData();
+    }
 
     public BorderPane getView() {
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(20));
         pane.getStyleClass().add("dashboard-root");
-
         pane.getStylesheets().add(
-            getClass().getResource("/styles/dashboard.css").toExternalForm()
+                getClass().getResource("/styles/dashboard.css").toExternalForm()
         );
 
         HBox summaryBox = new HBox(20);
@@ -35,13 +51,12 @@ public class DashboardView {
 
         HBox centerBox = new HBox(30);
         centerBox.setPadding(new Insets(20, 0, 0, 0));
-
-        VBox recentIdeas = createRecentIdeasSection();
+        VBox recentIdeas = createRecentIdeasSection(); // dynamic now
         VBox currentSprint = createCurrentSprintSection();
-
         centerBox.getChildren().addAll(recentIdeas, currentSprint);
         pane.setCenter(centerBox);
 
+        // Bottom quick actions
         HBox quickActions = createQuickActions();
         pane.setBottom(quickActions);
 
@@ -69,19 +84,55 @@ public class DashboardView {
         return card;
     }
 
+    // ============================
+    // Dynamic Recent Ideas Section
+    // ============================
     private VBox createRecentIdeasSection() {
         VBox section = new VBox(10);
         section.setPrefWidth(600);
-
         Label title = new Label("Recent Ideas");
         title.getStyleClass().add("section-title");
 
         VBox ideasList = new VBox(10);
-        ideasList.getChildren().addAll(
-                createIdeaItem("Mobile App Dark Mode", "Implement dark mode theme for better user experience.", "Approved"),
-                createIdeaItem("Advanced Search Filters", "Add search options to help users find content faster.", "Under Review"),
-                createIdeaItem("Real-time Notifications", "Push updates for team collaboration.", "New")
-        );
+        ideasList.getChildren().add(new Label("Loading ideas..."));
+
+        // Fetch from backend
+        new Thread(() -> {
+            try {
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:8080/api/ideas"))
+                        .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 200) {
+                    JSONArray ideas = new JSONArray(response.body());
+
+                    Platform.runLater(() -> {
+                        ideasList.getChildren().clear();
+                        if (ideas.length() == 0) {
+                            ideasList.getChildren().add(new Label("No ideas found."));
+                        } else {
+                            for (int i = 0; i < Math.min(5, ideas.length()); i++) {
+                                JSONObject idea = ideas.getJSONObject(i);
+                                String titleText = idea.optString("title", "Untitled Idea");
+                                String desc = idea.optString("description", "No description provided");
+                                String status = idea.optString("status", "New");
+                                ideasList.getChildren().add(createIdeaItem(titleText, desc, status));
+                            }
+                        }
+                    });
+                } else {
+                    Platform.runLater(() ->
+                            ideasList.getChildren().add(new Label("Failed to load ideas (status " + response.statusCode() + ")"))
+                    );
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() ->
+                        ideasList.getChildren().add(new Label("Error fetching ideas from backend.")));
+            }
+        }).start();
 
         section.getChildren().addAll(title, ideasList);
         return section;
@@ -140,12 +191,20 @@ public class DashboardView {
         box.setPadding(new Insets(20, 0, 0, 0));
         box.setAlignment(Pos.CENTER);
 
-        VBox ideaCard = createActionCard("Create Idea", "Share your innovative ideas with the team", "card-blue");
-        ideaCard.setOnMouseClicked(e -> {
-            com.example.ideaboard.util.DialogHelper.openCreateIdeaDialog();
-        });
+        VBox ideaCard = createActionCard("Create Idea", "Share your innovative ideas", "card-blue");
+        ideaCard.setOnMouseClicked(e -> com.example.ideaboard.util.DialogHelper.openCreateIdeaDialog());
 
         VBox storyCard = createActionCard("Create User Story", "Convert ideas into actionable stories", "card-blue");
+        storyCard.setOnMouseClicked(e -> {
+            UC03CreateUserStory app = new UC03CreateUserStory();
+            Stage stage = new Stage();
+            try {
+                app.start(stage);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
         VBox backlogCard = createActionCard("Prioritize Backlog", "Reorder stories by business value", "card-yellow");
         VBox reportCard = createActionCard("Generate Reports", "View velocity and burndown charts", "card-green");
 
@@ -171,5 +230,30 @@ public class DashboardView {
 
         card.getChildren().addAll(titleLabel, subLabel);
         return card;
+    }
+
+    // === Load live dashboard data from backend ===
+    private void loadDashboardData() {
+        new Thread(() -> {
+            try {
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:8080/api/dashboard"))
+                        .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                JSONObject json = new JSONObject(response.body());
+
+                Platform.runLater(() -> {
+                    totalIdeas.set(String.valueOf(json.getInt("totalIdeas")));
+                    userStories.set(String.valueOf(json.getInt("userStories")));
+                    sprintReady.set(String.valueOf(json.getInt("sprintReady")));
+                    teamVelocity.set(String.valueOf(json.getInt("teamVelocity")));
+                });
+
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

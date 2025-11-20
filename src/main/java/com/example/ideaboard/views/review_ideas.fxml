@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.ideaboard.controllers.ReviewIdeasController"
+            prefWidth="1000" prefHeight="650"
+            stylesheets="@/com/example/ideaboard/styles/review.css">
+
+    <!-- Left: list + search -->
+    <VBox spacing="12" padding="16">
+        <TextField fx:id="searchField" promptText="Search ideas..."/>
+        <ListView fx:id="ideasListView" prefWidth="300" prefHeight="500"/>
+        <HBox spacing="20">
+            <Label fx:id="totalIdeasLabel" text="0 Ideas"/>
+            <Label fx:id="activeIdeasLabel" text="0 Active"/>
+        </HBox>
+    </VBox>
+
+    <!-- Right: detail pane -->
+    <VBox fx:id="detailsCard" spacing="10" padding="20" BorderPane.alignment="CENTER_RIGHT">
+        <Text fx:id="ideaTitleText" style="-fx-font-size:18; -fx-font-weight:bold;"/>
+        <Label fx:id="ideaCategoryLabel" style="-fx-text-fill:#666;"/>
+        <Label fx:id="ideaStatusBadge" style="-fx-padding:4 10; -fx-background-radius:6;"/>
+        <Label text="Primary Actor:"/>
+        <Label fx:id="primaryActorLabel"/>
+        <Label text="Created:"/>
+        <Label fx:id="createdAtLabel"/>
+        <Label text="Updated:"/>
+        <Label fx:id="updatedAtLabel"/>
+        <Label text="Description:"/>
+        <TextArea fx:id="descriptionArea" prefRowCount="5" wrapText="true"/>
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="approveButton" text="Approve" onAction="#handleApprove"
+                    style="-fx-background-color:#4CAF50; -fx-text-fill:white;"/>
+            <Button fx:id="rejectButton" text="Reject" onAction="#handleReject"
+                    style="-fx-background-color:#F44336; -fx-text-fill:white;"/>
+        </HBox>
+    </VBox>
+</BorderPane>
