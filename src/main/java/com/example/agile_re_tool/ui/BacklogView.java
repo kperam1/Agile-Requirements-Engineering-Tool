@@ -1,6 +1,7 @@
 package com.example.agile_re_tool.ui;
 
 import com.example.agile_re_tool.UC04EditUserStory;
+import com.example.agile_re_tool.UC03CreateUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,6 +58,11 @@ public class BacklogView {
         filterBtn.setOnAction(e -> openFilterDialog());
         searchField.textProperty().addListener((obs, oldV, newV) -> applySearch(newV));
 
+        createBtn.setOnAction(e -> {
+            UC03CreateUserStory creator = new UC03CreateUserStory();
+            creator.openWindow();
+        });
+
         loadUserStories();
         return root;
     }
@@ -74,7 +80,6 @@ public class BacklogView {
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> updateUI(response.body()));
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -136,11 +141,11 @@ public class BacklogView {
 
             boolean match =
                     title.contains(keyword) ||
-                            desc.contains(keyword) ||
-                            assignee.contains(keyword) ||
-                            priority.contains(keyword) ||
-                            status.contains(keyword) ||
-                            points.contains(keyword);
+                    desc.contains(keyword) ||
+                    assignee.contains(keyword) ||
+                    priority.contains(keyword) ||
+                    status.contains(keyword) ||
+                    points.contains(keyword);
 
             if (match) result.put(obj);
         }
@@ -211,13 +216,13 @@ public class BacklogView {
         Label statusBadge = new Label(status);
         statusBadge.setStyle(
                 "-fx-background-color: #eef2ff; -fx-text-fill: #4338ca;" +
-                        "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
+                "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
         );
 
         Label priorityBadge = new Label(priority);
         priorityBadge.setStyle(
                 "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;" +
-                        "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
+                "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11;"
         );
 
         Label titleLabel = new Label(title);
@@ -233,7 +238,7 @@ public class BacklogView {
         Button editBtn = new Button("Edit");
         editBtn.setStyle(
                 "-fx-background-color: #2563eb; -fx-text-fill: white;" +
-                        "-fx-padding: 6 14; -fx-background-radius: 8;"
+                "-fx-padding: 6 14; -fx-background-radius: 8;"
         );
 
         editBtn.setOnAction(e -> {
@@ -251,11 +256,11 @@ public class BacklogView {
         card.setPadding(new Insets(15));
         card.setStyle(
                 "-fx-background-color: #ffffff;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-border-color: #e5e7eb;" +
-                        "-fx-border-width: 1;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);"
+                "-fx-background-radius: 12;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: #e5e7eb;" +
+                "-fx-border-width: 1;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);"
         );
 
         return card;
