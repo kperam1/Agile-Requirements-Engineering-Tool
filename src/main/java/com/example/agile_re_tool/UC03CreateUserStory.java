@@ -124,24 +124,41 @@ public class UC03CreateUserStory extends Application {
         grid.add(new Label("Priority"), 0, r); grid.add(priorityCombo, 1, r++);
         grid.add(new Label("Status"), 0, r); grid.add(statusCombo, 1, r++);
 
+        ToggleButton sprintToggle = new ToggleButton("Sprint Ready");
+        sprintToggle.setFocusTraversable(false);
+        sprintToggle.setSelected(false);
+        sprintToggle.setTooltip(new Tooltip("Mark story as sprint-ready"));
+        sprintToggle.getStyleClass().add("sprint-toggle");
+
         Button cancelBtn = new Button("Cancel");
         Button addBtn = new Button("Add Task");
-        cancelBtn.getStyleClass().add("button-cancel");
-        addBtn.getStyleClass().add("button-primary");
+        cancelBtn.getStyleClass().addAll("button", "cancel");
+        addBtn.getStyleClass().addAll("button", "primary");
         addBtn.setDefaultButton(true);
         cancelBtn.setCancelButton(true);
 
-        HBox buttons = new HBox(10, cancelBtn, addBtn);
+        HBox buttons = new HBox(10, sprintToggle, cancelBtn, addBtn);
         buttons.setAlignment(Pos.CENTER_RIGHT);
         buttons.setPadding(new Insets(8, 0, 0, 0));
 
         Label heading = new Label("Add New Story");
-        heading.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        heading.getStyleClass().add("heading");
+
+        ToggleButton mvpToggle = new ToggleButton("MVP");
+        mvpToggle.setFocusTraversable(false);
+        mvpToggle.setSelected(false);
+        mvpToggle.setTooltip(new Tooltip("Toggle MVP view"));
+        mvpToggle.getStyleClass().add("mvp-toggle");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox headerBox = new HBox(8, heading, spacer, mvpToggle);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
 
         Label subText = new Label("Create a new story for the selected idea. Fill in the details below.");
         subText.getStyleClass().add("subtext");
 
-        VBox root = new VBox(12, heading, subText, grid, buttons);
+        VBox root = new VBox(12, headerBox, subText, grid, buttons);
         root.setPadding(new Insets(16));
         root.setPrefWidth(760);
 

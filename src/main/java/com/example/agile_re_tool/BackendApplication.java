@@ -1,4 +1,4 @@
-package com.example.agile_re_tool.backend;
+package com.example.agile_re_tool;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
