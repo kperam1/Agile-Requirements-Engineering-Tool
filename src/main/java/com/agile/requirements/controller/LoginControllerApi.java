@@ -6,6 +6,7 @@ import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
+import com.example.agile_re_tool.session.UserSession;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -44,6 +45,7 @@ public class LoginControllerApi {
                 in.close();
 
                 if (response != null && !response.equals("null") && !response.isBlank()) {
+                    UserSession.setCurrentUser(username);
                     openWorkspace();
                 } else {
                     messageLabel.setText("Invalid credentials. Try again.");
