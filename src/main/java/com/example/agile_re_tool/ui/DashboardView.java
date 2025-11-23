@@ -27,8 +27,16 @@ public class DashboardView {
     private final StringProperty sprintReady = new SimpleStringProperty("0");
     private final StringProperty teamVelocity = new SimpleStringProperty("0");
 
+    private Label sprintNameLabel;
+    private ProgressBar sprintProgressBar;
+    private Label todoLabel;
+    private Label inProgressLabel;
+    private Label testingLabel;
+    private Label doneLabel;
+
     public DashboardView() {
         loadDashboardData();
+        loadSprintData();
     }
 
     public BorderPane getView() {
@@ -51,12 +59,11 @@ public class DashboardView {
 
         HBox centerBox = new HBox(30);
         centerBox.setPadding(new Insets(20, 0, 0, 0));
-        VBox recentIdeas = createRecentIdeasSection(); // dynamic now
+        VBox recentIdeas = createRecentIdeasSection();
         VBox currentSprint = createCurrentSprintSection();
         centerBox.getChildren().addAll(recentIdeas, currentSprint);
         pane.setCenter(centerBox);
 
-        // Bottom quick actions
         HBox quickActions = createQuickActions();
         pane.setBottom(quickActions);
 
@@ -84,19 +91,24 @@ public class DashboardView {
         return card;
     }
 
-    // ============================
-    // Dynamic Recent Ideas Section
-    // ============================
     private VBox createRecentIdeasSection() {
         VBox section = new VBox(10);
         section.setPrefWidth(600);
+
         Label title = new Label("Recent Ideas");
         title.getStyleClass().add("section-title");
 
-        VBox ideasList = new VBox(10);
-        ideasList.getChildren().add(new Label("Loading ideas..."));
+        VBox ideasContainer = new VBox(10);
+        ideasContainer.setPadding(new Insets(5));
+        ideasContainer.getChildren().add(new Label("Loading ideas..."));
 
-        // Fetch from backend
+        ScrollPane ideasScroll = new ScrollPane(ideasContainer);
+        ideasScroll.setFitToWidth(true);
+        ideasScroll.setPrefHeight(280);
+        ideasScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        ideasScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        ideasScroll.setStyle("-fx-background-color: transparent; -fx-background-insets: 0;");
+
         new Thread(() -> {
             try {
                 HttpClient client = HttpClient.newHttpClient();
@@ -109,54 +121,72 @@ public class DashboardView {
                     JSONArray ideas = new JSONArray(response.body());
 
                     Platform.runLater(() -> {
-                        ideasList.getChildren().clear();
+                        ideasContainer.getChildren().clear();
                         if (ideas.length() == 0) {
-                            ideasList.getChildren().add(new Label("No ideas found."));
+                            ideasContainer.getChildren().add(new Label("No ideas found."));
                         } else {
-                            for (int i = 0; i < Math.min(5, ideas.length()); i++) {
+                            for (int i = 0; i < ideas.length(); i++) {
                                 JSONObject idea = ideas.getJSONObject(i);
                                 String titleText = idea.optString("title", "Untitled Idea");
                                 String desc = idea.optString("description", "No description provided");
                                 String status = idea.optString("status", "New");
-                                ideasList.getChildren().add(createIdeaItem(titleText, desc, status));
+                                ideasContainer.getChildren().add(
+                                        createIdeaCard(i + 1, titleText, desc, status)
+                                );
                             }
                         }
                     });
                 } else {
-                    Platform.runLater(() ->
-                            ideasList.getChildren().add(new Label("Failed to load ideas (status " + response.statusCode() + ")"))
-                    );
+                    Platform.runLater(() -> {
+                        ideasContainer.getChildren().clear();
+                        ideasContainer.getChildren().add(
+                                new Label("Failed to load ideas (status " + response.statusCode() + ")")
+                        );
+                    });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(() ->
-                        ideasList.getChildren().add(new Label("Error fetching ideas from backend.")));
+                Platform.runLater(() -> {
+                    ideasContainer.getChildren().clear();
+                    ideasContainer.getChildren().add(new Label("Error fetching ideas from backend."));
+                });
             }
         }).start();
 
-        section.getChildren().addAll(title, ideasList);
+        section.getChildren().addAll(title, ideasScroll);
         return section;
     }
 
-    private HBox createIdeaItem(String title, String desc, String status) {
-        HBox idea = new HBox(10);
-        idea.setPadding(new Insets(10));
-        idea.getStyleClass().add("idea-item");
-        idea.setAlignment(Pos.CENTER_LEFT);
+    private VBox createIdeaCard(long index, String title, String desc, String status) {
+        Label titleLabel = new Label("#" + index + " • " + title);
+        titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #111827;");
 
-        VBox text = new VBox(5);
-        Label ideaTitle = new Label(title);
-        ideaTitle.getStyleClass().add("idea-title");
+        Label descLabel = new Label(desc);
+        descLabel.setWrapText(true);
+        descLabel.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 12px;");
 
-        Label ideaDesc = new Label(desc);
-        ideaDesc.getStyleClass().add("idea-desc");
+        Label statusBadge = new Label(status);
+        statusBadge.setStyle(
+                "-fx-background-color: #eef2ff; -fx-text-fill: #4338ca;" +
+                        "-fx-padding: 3 10; -fx-background-radius: 12; -fx-font-size: 11;"
+        );
 
-        Label ideaStatus = new Label(status);
-        ideaStatus.getStyleClass().add("idea-status");
+        HBox statusRow = new HBox(statusBadge);
+        statusRow.setAlignment(Pos.CENTER_LEFT);
 
-        text.getChildren().addAll(ideaTitle, ideaDesc, ideaStatus);
-        idea.getChildren().add(text);
-        return idea;
+        VBox card = new VBox(6, titleLabel, descLabel, statusRow);
+        card.setPadding(new Insets(12));
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setStyle(
+                "-fx-background-color: #ffffff;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-border-color: #e5e7eb;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 6, 0, 0, 1);"
+        );
+
+        return card;
     }
 
     private VBox createCurrentSprintSection() {
@@ -165,24 +195,29 @@ public class DashboardView {
         sprintBox.setPrefWidth(300);
         sprintBox.getStyleClass().add("sprint-box");
 
-        Label title = new Label("Current Sprint");
+        Label title = new Label("Board Progress");
         title.getStyleClass().add("section-title");
 
-        Label sprintName = new Label("Sprint 24 - Active");
-        sprintName.getStyleClass().add("sprint-name");
+        sprintNameLabel = new Label("Total stories: 0");
+        sprintNameLabel.getStyleClass().add("sprint-name");
 
-        ProgressBar progress = new ProgressBar(0.65);
-        progress.setPrefWidth(250);
+        sprintProgressBar = new ProgressBar(0.0);
+        sprintProgressBar.setPrefWidth(250);
+
+        todoLabel = new Label("To Do: 0");
+        inProgressLabel = new Label("In Progress: 0");
+        testingLabel = new Label("Testing: 0");
+        doneLabel = new Label("Done: 0");
 
         VBox statusList = new VBox(5);
         statusList.getChildren().addAll(
-                new Label("To Do: 3"),
-                new Label("In Progress: 5"),
-                new Label("Testing: 2"),
-                new Label("Done: 8")
+                todoLabel,
+                inProgressLabel,
+                testingLabel,
+                doneLabel
         );
 
-        sprintBox.getChildren().addAll(title, sprintName, progress, statusList);
+        sprintBox.getChildren().addAll(title, sprintNameLabel, sprintProgressBar, statusList);
         return sprintBox;
     }
 
@@ -232,7 +267,6 @@ public class DashboardView {
         return card;
     }
 
-    // === Load live dashboard data from backend ===
     private void loadDashboardData() {
         new Thread(() -> {
             try {
@@ -252,6 +286,78 @@ public class DashboardView {
                 });
 
             } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void loadSprintData() {
+        new Thread(() -> {
+            try {
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:8080/api/userstories"))
+                        .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() != 200) return;
+
+                JSONArray stories = new JSONArray(response.body());
+
+                int todo = 0;
+                int inProgress = 0;
+                int testing = 0;
+                int done = 0;
+                int totalStories = stories.length();
+
+                int totalPoints = 0;
+                int donePoints = 0;
+
+                for (int i = 0; i < stories.length(); i++) {
+                    JSONObject s = stories.getJSONObject(i);
+                    String status = s.optString("status", "");
+                    Integer sp = s.isNull("storyPoints") ? null : s.optInt("storyPoints");
+
+                    if ("To Do".equalsIgnoreCase(status) || "Backlog".equalsIgnoreCase(status)) {
+                        todo++;
+                    } else if ("In Progress".equalsIgnoreCase(status)) {
+                        inProgress++;
+                    } else if ("Testing".equalsIgnoreCase(status)) {
+                        testing++;
+                    } else if ("Done".equalsIgnoreCase(status)) {
+                        done++;
+                    }
+
+                    if (sp != null && sp > 0) {
+                        totalPoints += sp;
+                        if ("Done".equalsIgnoreCase(status)) {
+                            donePoints += sp;
+                        }
+                    }
+                }
+
+                double progress = 0.0;
+                if (totalPoints > 0) {
+                    progress = (double) donePoints / (double) totalPoints;
+                }
+
+                int finalTodo = todo;
+                int finalInProgress = inProgress;
+                int finalTesting = testing;
+                int finalDone = done;
+                int finalTotalStories = totalStories;
+                double finalProgress = progress;
+
+                Platform.runLater(() -> {
+                    sprintNameLabel.setText("Total stories: " + finalTotalStories);
+                    sprintProgressBar.setProgress(finalProgress);
+                    todoLabel.setText("To Do: " + finalTodo);
+                    inProgressLabel.setText("In Progress: " + finalInProgress);
+                    testingLabel.setText("Testing: " + finalTesting);
+                    doneLabel.setText("Done: " + finalDone);
+                });
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();

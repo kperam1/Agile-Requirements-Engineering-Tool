@@ -21,20 +21,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
 
-/**
- * Sprint Board UI with four columns: To Do, In Progress, Testing, Done.
- * Shows summary stats and allows filtering by assignee.
- */
 public class SprintBoardView {
 
     private final VBox todoColumn = buildColumn("To Do");
     private final VBox inProgressColumn = buildColumn("In Progress");
     private final VBox testingColumn = buildColumn("Testing");
     private final VBox doneColumn = buildColumn("Done");
-    
+
     private JSONArray allStories = new JSONArray();
     private String currentFilter = "All Members";
-    
+
     private Label todoSummary;
     private Label inProgressSummary;
     private Label testingSummary;
@@ -52,8 +48,7 @@ public class SprintBoardView {
         Button refreshBtn = new Button("Refresh");
         refreshBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14;");
         refreshBtn.setOnAction(e -> loadStories());
-        
-        // Assignee filter dropdown
+
         assigneeFilter = new ComboBox<>();
         assigneeFilter.getItems().add("All Members");
         assigneeFilter.setValue("All Members");
@@ -68,13 +63,12 @@ public class SprintBoardView {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(0,0,12,0));
         HBox.setHgrow(header.getChildren().get(1), Priority.ALWAYS);
-        
-        // Summary section
+
         todoSummary = createSummaryLabel("To Do: 0", "#3b82f6");
         inProgressSummary = createSummaryLabel("In Progress: 0", "#f59e0b");
         testingSummary = createSummaryLabel("Testing: 0", "#8b5cf6");
         doneSummary = createSummaryLabel("Done: 0", "#10b981");
-        
+
         HBox summaryBox = new HBox(16, todoSummary, inProgressSummary, testingSummary, doneSummary);
         summaryBox.setPadding(new Insets(12));
         summaryBox.setAlignment(Pos.CENTER_LEFT);
@@ -83,10 +77,10 @@ public class SprintBoardView {
         VBox topSection = new VBox(12, header, summaryBox);
 
         HBox columns = new HBox(16,
-            wrapScrollable(todoColumn),
-            wrapScrollable(inProgressColumn),
-            wrapScrollable(testingColumn),
-            wrapScrollable(doneColumn));
+                wrapScrollable(todoColumn),
+                wrapScrollable(inProgressColumn),
+                wrapScrollable(testingColumn),
+                wrapScrollable(doneColumn));
         columns.setPrefHeight(600);
         columns.setAlignment(Pos.TOP_LEFT);
 
@@ -96,7 +90,7 @@ public class SprintBoardView {
         loadStories();
         return root;
     }
-    
+
     private Label createSummaryLabel(String text, String color) {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size:15px; -fx-font-weight:700; -fx-text-fill:" + color + "; -fx-padding:8 16; -fx-background-color:#ffffff; -fx-background-radius:10; -fx-border-color:" + color + "; -fx-border-radius:10; -fx-border-width:2;");
@@ -106,15 +100,15 @@ public class SprintBoardView {
     private VBox buildColumn(String title) {
         Label titleLbl = new Label(title);
         titleLbl.setStyle("-fx-font-size:16px; -fx-font-weight:700; -fx-text-fill:#1f2937;");
-        
+
         Label countLbl = new Label("0");
         countLbl.setStyle("-fx-font-size:14px; -fx-font-weight:600; -fx-text-fill:#6b7280; -fx-background-color:#e5e7eb; -fx-background-radius:12; -fx-padding:4 10;");
         countLbl.setId(title.toLowerCase().replace(" ", "-") + "-count");
-        
+
         HBox header = new HBox(10, titleLbl, new Region(), countLbl);
         header.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(header.getChildren().get(1), Priority.ALWAYS);
-        
+
         VBox box = new VBox(10, header);
         box.setPadding(new Insets(10));
         box.setStyle("-fx-background-color:#f9fafb; -fx-background-radius:12; -fx-border-color:#e5e7eb; -fx-border-radius:12;");
@@ -157,7 +151,7 @@ public class SprintBoardView {
             }
         }).start();
     }
-    
+
     private void populateAssigneeFilter() {
         Set<String> assignees = new HashSet<>();
         assignees.add("All Members");
@@ -165,23 +159,26 @@ public class SprintBoardView {
             String assignee = allStories.getJSONObject(i).optString("assignedTo","");
             if (!assignee.isEmpty()) assignees.add(assignee);
         }
-        String current = assigneeFilter.getValue();
+        String prev = assigneeFilter.getValue();
         assigneeFilter.getItems().clear();
         assigneeFilter.getItems().addAll(assignees.stream().sorted().toList());
-        if (assignees.contains(current)) {
-            assigneeFilter.setValue(current);
+        if (assignees.contains(prev)) {
+            assigneeFilter.setValue(prev);
+            currentFilter = prev;
         } else {
             assigneeFilter.setValue("All Members");
             currentFilter = "All Members";
         }
     }
-    
+
     private void applyFilter() {
+        if (currentFilter == null) currentFilter = "All Members";
+
         todoColumn.getChildren().retainAll(todoColumn.getChildren().get(0));
         inProgressColumn.getChildren().retainAll(inProgressColumn.getChildren().get(0));
         testingColumn.getChildren().retainAll(testingColumn.getChildren().get(0));
         doneColumn.getChildren().retainAll(doneColumn.getChildren().get(0));
-        
+
         if (allStories.length() == 0) {
             Label empty = new Label("No stories in sprint.");
             empty.setStyle("-fx-text-fill:#6b7280;");
@@ -193,25 +190,24 @@ public class SprintBoardView {
             updateCount(doneColumn, "done-count", 0);
             return;
         }
-        
+
         int todoCount = 0, inProgressCount = 0, testingCount = 0, doneCount = 0;
-        
+
         for (int i=0; i<allStories.length(); i++) {
             JSONObject o = allStories.getJSONObject(i);
             String assignee = o.optString("assignedTo","");
-            
-            // Apply filter
-            if (!currentFilter.equals("All Members") && !currentFilter.equals(assignee)) {
+
+            if (!"All Members".equals(currentFilter) && !currentFilter.equals(assignee)) {
                 continue;
             }
-            
+
             long id = o.getLong("id");
             String title = o.optString("title","Untitled");
             String desc = o.optString("description","");
             String status = o.optString("status","To Do");
             int points = o.optInt("storyPoints",0);
             VBox card = buildCard(id, title, desc, status, assignee, points);
-            
+
             switch (status) {
                 case "In Progress" -> {
                     inProgressColumn.getChildren().add(card);
@@ -231,14 +227,14 @@ public class SprintBoardView {
                 }
             }
         }
-        
+
         updateSummary(todoCount, inProgressCount, testingCount, doneCount);
         updateCount(todoColumn, "to-do-count", todoCount);
         updateCount(inProgressColumn, "in-progress-count", inProgressCount);
         updateCount(testingColumn, "testing-count", testingCount);
         updateCount(doneColumn, "done-count", doneCount);
     }
-    
+
     private void updateSummary(int todo, int inProgress, int testing, int done) {
         todoSummary.setText("To Do: " + todo);
         inProgressSummary.setText("In Progress: " + inProgress);
@@ -251,7 +247,7 @@ public class SprintBoardView {
         err.setStyle("-fx-text-fill:#dc2626;");
         todoColumn.getChildren().add(err);
     }
-    
+
     private void updateCount(VBox column, String id, int count) {
         column.lookupAll("#" + id).forEach(node -> {
             if (node instanceof Label lbl) {
@@ -261,74 +257,64 @@ public class SprintBoardView {
     }
 
     private VBox buildCard(long id, String title, String desc, String status, String assignee, int points) {
-        // Avatar
         Circle avatar = new Circle(20, Color.web("#e0f2fe"));
         Text initials = new Text(getInitials(assignee));
         initials.setStyle("-fx-font-weight:700; -fx-fill:#0369a1; -fx-font-size:12px;");
         StackPane avatarPane = new StackPane(avatar, initials);
 
-        // Title
         Label titleLbl = new Label(title);
         titleLbl.setStyle("-fx-font-size:15px; -fx-font-weight:700; -fx-text-fill:#111827;");
         titleLbl.setWrapText(true);
         titleLbl.setMaxWidth(260);
 
-        // Description
         Label descLbl = new Label(desc.length() > 100 ? desc.substring(0, 100) + "..." : desc);
         descLbl.setWrapText(true);
         descLbl.setMaxWidth(260);
         descLbl.setStyle("-fx-text-fill:#6b7280; -fx-font-size:13px;");
 
-        // Story Points Badge
         Label pointsBadge = new Label("SP: " + points);
         pointsBadge.setStyle(
-            "-fx-background-color:#dbeafe; -fx-text-fill:#1e40af; " +
-            "-fx-padding:4 10; -fx-background-radius:12; -fx-font-size:11px; -fx-font-weight:600;"
+                "-fx-background-color:#dbeafe; -fx-text-fill:#1e40af; " +
+                        "-fx-padding:4 10; -fx-background-radius:12; -fx-font-size:11px; -fx-font-weight:600;"
         );
 
-        // Assignee Label
         Label assigneeLbl = new Label(assignee.isEmpty() ? "Unassigned" : assignee);
         assigneeLbl.setStyle("-fx-text-fill:#6b7280; -fx-font-size:12px;");
 
-        // Edit Button
         Button editBtn = new Button("Edit");
         editBtn.setStyle(
-            "-fx-background-color:#2563eb; -fx-text-fill:white; " +
-            "-fx-background-radius:8; -fx-padding:6 14; -fx-font-size:12px; -fx-cursor:hand;"
+                "-fx-background-color:#2563eb; -fx-text-fill:white; " +
+                        "-fx-background-radius:8; -fx-padding:6 14; -fx-font-size:12px; -fx-cursor:hand;"
         );
         editBtn.setOnAction(e -> new UC04EditUserStory(id).openWindow());
 
-        // Header with avatar and title
         HBox header = new HBox(10, avatarPane, titleLbl);
         header.setAlignment(Pos.TOP_LEFT);
 
-        // Footer with points and assignee
         HBox footer = new HBox(10, pointsBadge, new Region(), assigneeLbl);
         footer.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(footer.getChildren().get(1), Priority.ALWAYS);
 
-        // Card container
         VBox card = new VBox(10, header, descLbl, footer, editBtn);
         card.setPadding(new Insets(14));
         card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
-            "-fx-cursor:hand;"
+                "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+                        "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+                        "-fx-cursor:hand;"
         );
 
-        // Hover effect
         card.setOnMouseEntered(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#3b82f6; -fx-border-radius:12; -fx-border-width:2; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3); " +
-            "-fx-cursor:hand;"
+                "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+                        "-fx-border-color:#3b82f6; -fx-border-radius:12; -fx-border-width:2; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3); " +
+                        "-fx-cursor:hand;"
         ));
         card.setOnMouseExited(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
-            "-fx-cursor:hand;"
+                "-fx-background-color:#ffffff; -fx-background-radius:12; " +
+                        "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+                        "-fx-cursor:hand;"
         ));
 
         return card;

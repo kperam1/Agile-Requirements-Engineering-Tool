@@ -3,20 +3,13 @@ package com.example.agile_re_tool;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
-import org.json.JSONObject;
-
 
 
 import java.io.IOException;
@@ -332,5 +325,6 @@ public class UC03CreateUserStory extends Application {
        launch();
    }
 }
+
 
 

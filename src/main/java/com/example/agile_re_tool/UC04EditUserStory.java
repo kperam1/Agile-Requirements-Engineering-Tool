@@ -1,5 +1,6 @@
 package com.example.agile_re_tool;
 
+import com.example.agile_re_tool.session.UserSession;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
@@ -12,20 +13,21 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.*;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.example.agile_re_tool.session.UserSession;
 
 public class UC04EditUserStory extends Application {
 
-    private final UserStoryDao dao = new UserStoryDao();
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private List<String> assignees = List.of();
     private List<String> estimateTypes = List.of();
@@ -55,27 +57,32 @@ public class UC04EditUserStory extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("UC-04 - Edit User Story");
+        primaryStage.setTitle(editingId > 0 ? "UC-04 - Edit User Story #" + editingId
+                : "UC-04 - Edit User Story");
 
         loadConfig();
 
-        Optional<CreateStoryDto> existingOpt = dao.findById(editingId);
-        CreateStoryDto existing = existingOpt.orElseGet(() -> {
-            CreateStoryDto d = new CreateStoryDto();
-            d.title = "";
-            d.description = "";
-            d.acceptanceCriteria = "";
-            d.assignee = null;
-            d.estimateType = "Story Points";
-            d.storyPoints = defaultStoryPoints;
-            d.size = null;
-            d.timeEstimate = null;
-            d.priority = defaultPriority;
-            d.status = defaultStatus;
-            return d;
-        });
+        CreateStoryDto existing = loadExistingFromBackend(editingId)
+                .orElseGet(() -> {
+                    CreateStoryDto d = new CreateStoryDto();
+                    d.title = "";
+                    d.description = "";
+                    d.acceptanceCriteria = "";
+                    d.assignee = null;
+                    d.estimateType = "Story Points";
+                    d.storyPoints = defaultStoryPoints;
+                    d.size = null;
+                    d.timeEstimate = null;
+                    d.priority = defaultPriority;
+                    d.status = defaultStatus;
+                    d.mvp = false;
+                    d.sprintReady = false;
+                    return d;
+                });
 
-        Label heading = new Label("Edit Story");
+        Label heading = new Label(
+                editingId > 0 ? "Edit Story #" + editingId : "Edit Story"
+        );
         heading.setStyle("-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #111827;");
 
         Label subText = new Label("Update task details and save your changes.");
@@ -148,7 +155,9 @@ public class UC04EditUserStory extends Application {
         estimateTypeCombo.getItems().setAll(estimateTypes);
         estimateTypeCombo.setMaxWidth(Double.MAX_VALUE);
         estimateTypeCombo.setPromptText("Estimate Type");
-        estimateTypeCombo.getSelectionModel().select(Optional.ofNullable(existing.estimateType).orElse("Story Points"));
+        estimateTypeCombo.getSelectionModel().select(
+                Optional.ofNullable(existing.estimateType).orElse("Story Points")
+        );
 
         ComboBox<Integer> pointsCombo = new ComboBox<>();
         pointsCombo.getItems().addAll(FIBONACCI_POINTS);
@@ -173,12 +182,16 @@ public class UC04EditUserStory extends Application {
         ComboBox<String> priorityCombo = new ComboBox<>();
         priorityCombo.getItems().addAll("Low", "Medium", "High");
         priorityCombo.setMaxWidth(Double.MAX_VALUE);
-        priorityCombo.getSelectionModel().select(Optional.ofNullable(existing.priority).orElse(defaultPriority));
+        priorityCombo.getSelectionModel().select(
+                Optional.ofNullable(existing.priority).orElse(defaultPriority)
+        );
 
         ComboBox<String> statusCombo = new ComboBox<>();
-        statusCombo.getItems().addAll("To Do", "In Progress", "Testing", "Done");
+        statusCombo.getItems().addAll("Backlog", "To Do", "In Progress", "Testing", "Done");
         statusCombo.setMaxWidth(Double.MAX_VALUE);
-        statusCombo.getSelectionModel().select(Optional.ofNullable(existing.status).orElse(defaultStatus));
+        statusCombo.getSelectionModel().select(
+            Optional.ofNullable(existing.status).orElse(defaultStatus)
+        );
 
         VBox compactEstimateBox = new VBox(8);
         compactEstimateBox.setPadding(new Insets(8));
@@ -232,7 +245,6 @@ public class UC04EditUserStory extends Application {
             } else {
                 assignedCard.setVisible(true);
                 assignedNameLabel.setText(name);
-
                 String[] parts = name.trim().split("\\s+");
                 String inits = Arrays.stream(parts)
                         .map(s -> s.substring(0, 1).toUpperCase())
@@ -253,6 +265,28 @@ public class UC04EditUserStory extends Application {
                 new Label("Status"), statusCombo,
                 assignedHeader, assignedCard
         );
+
+        ToggleButton mvpToggle = buildToggle(Boolean.TRUE.equals(existing.mvp));
+        Label mvpTitle = new Label("MVP");
+        mvpTitle.setStyle("-fx-font-weight: 600;");
+        Label mvpHint = new Label("Mark as MVP story");
+        mvpHint.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 11;");
+        VBox mvpTextBox = new VBox(2, mvpTitle, mvpHint);
+        HBox mvpRow = new HBox(12, mvpTextBox, mvpToggle);
+        mvpRow.setAlignment(Pos.CENTER_LEFT);
+
+        ToggleButton sprintToggle = buildToggle(Boolean.TRUE.equals(existing.sprintReady));
+        Label srTitle = new Label("Sprint Ready");
+        srTitle.setStyle("-fx-font-weight: 600;");
+        Label srHint = new Label("Mark as ready to move into sprint");
+        srHint.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 11;");
+        VBox srTextBox = new VBox(2, srTitle, srHint);
+        HBox srRow = new HBox(12, srTextBox, sprintToggle);
+        srRow.setAlignment(Pos.CENTER_LEFT);
+
+        VBox flagsBox = new VBox(10, mvpRow, srRow);
+        flagsBox.setPadding(new Insets(12));
+        flagsBox.setStyle("-fx-background-color:#f9fafb; -fx-background-radius:10; -fx-border-color:#e5e7eb; -fx-border-radius:10;");
 
         Label commentsHeader = new Label("Comments");
         commentsHeader.setStyle("-fx-font-weight: 700; -fx-font-size: 14;");
@@ -306,11 +340,11 @@ public class UC04EditUserStory extends Application {
                     setGraphic(null);
                     return;
                 }
-                String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                        .format(item.createdAt.atZone(ZoneId.systemDefault()));
                 String author = Optional.ofNullable(item.author).filter(a -> !a.isBlank()).orElse("Anonymous");
-                meta.setText(author + " • " + time);
+                String time = Optional.ofNullable(item.createdAt).orElse("");
+                meta.setText(author + (time.isBlank() ? "" : " • " + time));
                 bodyLabel.setText(Optional.ofNullable(item.body).orElse(""));
+
                 String currentUser = Optional.ofNullable(UserSession.getCurrentUser()).orElse("");
                 boolean mine = !currentUser.isBlank() && currentUser.equals(item.author);
                 actions.setVisible(mine);
@@ -324,25 +358,33 @@ public class UC04EditUserStory extends Application {
                         showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
                         return;
                     }
-                    try {
-                        dao.updateComment(item.id, newBody);
-                        current.body = newBody;
-                        exitEditMode(true);
-                    } catch (Exception ex) {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Update failed: " + ex.getMessage());
-                    }
+                    new Thread(() -> {
+                        try {
+                            updateCommentOnBackend(item.id, newBody);
+                            current.body = newBody;
+                            Platform.runLater(() -> exitEditMode(true));
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            showAlert(Alert.AlertType.ERROR, "Error", "Update failed: " + ex.getMessage());
+                        }
+                    }).start();
                 });
                 deleteBtn.setOnAction(e -> {
                     Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete this comment?", ButtonType.YES, ButtonType.NO);
                     a.setHeaderText(null);
                     Optional<ButtonType> r = a.showAndWait();
                     if (r.isPresent() && r.get() == ButtonType.YES) {
-                        try {
-                            dao.deleteComment(item.id);
-                            ((ListView<CommentDto>) getListView()).getItems().remove(item);
-                        } catch (Exception ex) {
-                            showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
-                        }
+                        new Thread(() -> {
+                            try {
+                                deleteCommentOnBackend(item.id);
+                                Platform.runLater(() ->
+                                        ((ListView<CommentDto>) getListView()).getItems().remove(item)
+                                );
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
+                            }
+                        }).start();
                     }
                 });
             }
@@ -355,24 +397,34 @@ public class UC04EditUserStory extends Application {
         Button addCommentBtn = new Button("Add Comment");
         addCommentBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding:6 12;");
 
-        Runnable refreshComments = () -> Platform.runLater(() -> {
+        Runnable refreshComments = () -> {
             if (editingId <= 0) {
-                commentsList.getItems().clear();
-                newCommentArea.setDisable(true);
-                addCommentBtn.setDisable(true);
+                Platform.runLater(() -> {
+                    commentsList.getItems().clear();
+                    newCommentArea.setDisable(true);
+                    addCommentBtn.setDisable(true);
+                });
                 return;
             }
-            newCommentArea.setDisable(false);
-            addCommentBtn.setDisable(false);
-            List<CommentDto> items = dao.listComments(editingId);
-            commentsList.getItems().setAll(items);
-        });
+            new Thread(() -> {
+                try {
+                    List<CommentDto> items = loadCommentsFromBackend(editingId);
+                    Platform.runLater(() -> {
+                        newCommentArea.setDisable(false);
+                        addCommentBtn.setDisable(false);
+                        commentsList.getItems().setAll(items);
+                    });
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+        };
 
         refreshComments.run();
 
         addCommentBtn.setOnAction(e -> {
             if (editingId <= 0) {
-                showAlert(Alert.AlertType.WARNING, "Save First", "Please save the story before adding comments.");
+                showAlert(Alert.AlertType.WARNING, "Save First", "This story does not have a valid id.");
                 return;
             }
             String body = Optional.ofNullable(newCommentArea.getText()).orElse("").trim();
@@ -380,23 +432,28 @@ public class UC04EditUserStory extends Application {
                 showAlert(Alert.AlertType.ERROR, "Validation", "Comment cannot be empty.");
                 return;
             }
-            String author = Optional.ofNullable(UserSession.getCurrentUser()).filter(s -> !s.isBlank()).orElse("Anonymous");
-            try {
-                dao.addComment(editingId, author, body);
-                newCommentArea.clear();
-                refreshComments.run();
-            } catch (Exception ex) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to add comment: " + ex.getMessage());
-                ex.printStackTrace();
-            }
+            String author = Optional.ofNullable(UserSession.getCurrentUser())
+                    .filter(s -> !s.isBlank())
+                    .orElse("Anonymous");
+
+            new Thread(() -> {
+                try {
+                    addCommentOnBackend(editingId, author, body);
+                    Platform.runLater(() -> newCommentArea.clear());
+                    refreshComments.run();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to add comment: " + ex.getMessage());
+                }
+            }).start();
         });
 
         VBox commentsBox = new VBox(8,
-            commentsHeader,
-            commentsList,
-            new Label("Add a comment"),
-            newCommentArea,
-            addCommentBtn
+                commentsHeader,
+                commentsList,
+                new Label("Add a comment"),
+                newCommentArea,
+                addCommentBtn
         );
         commentsBox.setPadding(new Insets(12));
         commentsBox.setStyle("-fx-background-color:#f9fafb; -fx-background-radius:10; -fx-border-color:#e5e7eb; -fx-border-radius:10;");
@@ -414,7 +471,7 @@ public class UC04EditUserStory extends Application {
         buttonsRow.setPadding(new Insets(12));
         buttonsRow.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox leftWithComments = new VBox(16, leftColumn, commentsBox);
+        VBox leftWithComments = new VBox(16, leftColumn, flagsBox, commentsBox);
         leftWithComments.setPadding(new Insets(12));
 
         BorderPane root = new BorderPane();
@@ -425,17 +482,24 @@ public class UC04EditUserStory extends Application {
         cancelBtn.setOnAction(e -> primaryStage.close());
 
         deleteBtn.setOnAction(e -> {
+            if (editingId <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Cannot delete", "This story does not have a valid id.");
+                return;
+            }
             Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete this task?", ButtonType.YES, ButtonType.NO);
             a.setHeaderText(null);
             Optional<ButtonType> res = a.showAndWait();
             if (res.isPresent() && res.get() == ButtonType.YES) {
-                try {
-                    dao.delete(editingId);
-                    showAlert(Alert.AlertType.INFORMATION, "Deleted", "Task deleted.");
-                    primaryStage.close();
-                } catch (Exception ex) {
-                    showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
-                }
+                new Thread(() -> {
+                    try {
+                        deleteStory(editingId);
+                        showAlert(Alert.AlertType.INFORMATION, "Deleted", "Task deleted.");
+                        Platform.runLater(primaryStage::close);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
+                    }
+                }).start();
             }
         });
 
@@ -463,14 +527,23 @@ public class UC04EditUserStory extends Application {
 
             dto.priority = priorityCombo.getValue();
             dto.status = statusCombo.getValue();
+            dto.mvp = mvpToggle.isSelected();
+            dto.sprintReady = sprintToggle.isSelected();
 
-            try {
-                dao.update(editingId, dto);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "User story updated (id=" + editingId + ")");
-                primaryStage.close();
-            } catch (Exception ex) {
-                showAlert(Alert.AlertType.ERROR, "DB Error", ex.getMessage());
-            }
+            new Thread(() -> {
+                try {
+                    if (editingId > 0) {
+                        updateStory(editingId, dto);
+                        showAlert(Alert.AlertType.INFORMATION, "Success", "User story updated (id=" + editingId + ")");
+                    } else {
+                        showAlert(Alert.AlertType.WARNING, "Warning", "No valid id – cannot update backend.");
+                    }
+                    Platform.runLater(primaryStage::close);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, "Error", "Update failed: " + ex.getMessage());
+                }
+            }).start();
         });
 
         Scene scene = new Scene(root, 1120, 720);
@@ -483,6 +556,174 @@ public class UC04EditUserStory extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private ToggleButton buildToggle(boolean initialOn) {
+        ToggleButton toggle = new ToggleButton();
+        toggle.setPrefWidth(52);
+        toggle.setPrefHeight(28);
+        toggle.setFocusTraversable(false);
+        toggle.setText("");
+        StackPane knob = new StackPane();
+        Circle c = new Circle(11, Color.WHITE);
+        knob.getChildren().add(c);
+        knob.setMaxSize(22, 22);
+        knob.setMinSize(22, 22);
+        toggle.setGraphic(knob);
+        toggle.setGraphicTextGap(0);
+
+        Runnable applyStyle = () -> {
+            if (toggle.isSelected()) {
+                toggle.setStyle("-fx-background-color: #4ade80; -fx-background-radius: 14; -fx-padding: 0 4 0 0;");
+                knob.setTranslateX(10);
+            } else {
+                toggle.setStyle("-fx-background-color: #d1d5db; -fx-background-radius: 14; -fx-padding: 0 0 0 4;");
+                knob.setTranslateX(-10);
+            }
+        };
+
+        toggle.selectedProperty().addListener((obs, ov, nv) -> applyStyle.run());
+        toggle.setSelected(initialOn);
+        applyStyle.run();
+        return toggle;
+    }
+
+    private Optional<CreateStoryDto> loadExistingFromBackend(long id) {
+        if (id <= 0) return Optional.empty();
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/api/userstories/" + id))
+                    .GET()
+                    .build();
+            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+                JSONObject obj = new JSONObject(resp.body());
+                CreateStoryDto d = new CreateStoryDto();
+                d.title = obj.optString("title", "");
+                d.description = obj.optString("description", "");
+                d.acceptanceCriteria = obj.optString("acceptanceCriteria", "");
+                d.assignee = obj.isNull("assignedTo") ? null : obj.optString("assignedTo", null);
+                d.estimateType = "Story Points";
+                int sp = obj.optInt("storyPoints", 0);
+                d.storyPoints = sp == 0 ? null : sp;
+                d.size = null;
+                d.timeEstimate = null;
+                d.priority = obj.optString("priority", defaultPriority);
+                d.status = obj.optString("status", defaultStatus);
+                d.mvp = obj.has("mvp") && !obj.isNull("mvp") && obj.getBoolean("mvp");
+                d.sprintReady = obj.has("sprintReady") && !obj.isNull("sprintReady") && obj.getBoolean("sprintReady");
+                return Optional.of(d);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    private void updateStory(long id, CreateStoryDto dto) throws Exception {
+        JSONObject obj = new JSONObject();
+        obj.put("title", dto.title);
+        obj.put("description", dto.description);
+        obj.put("acceptanceCriteria", dto.acceptanceCriteria);
+        obj.put("assignedTo", dto.assignee);
+        obj.put("priority", dto.priority);
+        obj.put("status", dto.status);
+        if (dto.storyPoints != null) obj.put("storyPoints", dto.storyPoints);
+        else obj.put("storyPoints", JSONObject.NULL);
+        obj.put("mvp", dto.mvp);
+        obj.put("sprintReady", dto.sprintReady);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/userstories/" + id))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(obj.toString()))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Backend update failed: " + resp.statusCode());
+        }
+    }
+
+    private void deleteStory(long id) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/userstories/" + id))
+                .DELETE()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Backend delete failed: " + resp.statusCode());
+        }
+    }
+
+    private List<CommentDto> loadCommentsFromBackend(long storyId) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/userstories/" + storyId + "/comments"))
+                .GET()
+                .build();
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Failed to load comments: " + resp.statusCode());
+        }
+        JSONArray arr = new JSONArray(resp.body());
+        List<CommentDto> list = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject o = arr.getJSONObject(i);
+            CommentDto c = new CommentDto();
+            c.id = o.getLong("id");
+            c.storyId = o.getLong("storyId");
+            c.author = o.optString("author", null);
+            c.body = o.optString("body", "");
+            c.createdAt = o.optString("createdAt", "");
+            list.add(c);
+        }
+        return list;
+    }
+
+    private void addCommentOnBackend(long storyId, String author, String body) throws Exception {
+        JSONObject obj = new JSONObject();
+        obj.put("author", author);
+        obj.put("body", body);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/userstories/" + storyId + "/comments"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(obj.toString()))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Failed to add comment: " + resp.statusCode());
+        }
+    }
+
+    private void updateCommentOnBackend(long commentId, String body) throws Exception {
+        JSONObject obj = new JSONObject();
+        obj.put("body", body);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/comments/" + commentId))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(obj.toString()))
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Failed to update comment: " + resp.statusCode());
+        }
+    }
+
+    private void deleteCommentOnBackend(long commentId) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/api/comments/" + commentId))
+                .DELETE()
+                .build();
+
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            throw new RuntimeException("Failed to delete comment: " + resp.statusCode());
+        }
     }
 
     private void loadConfig() {
@@ -527,12 +768,12 @@ public class UC04EditUserStory extends Application {
         Platform.runLater(() -> {
             Alert a = new Alert(t, body, ButtonType.OK);
             a.setTitle(title);
+            a.setHeaderText(null);
             a.showAndWait();
         });
     }
 
     public static void main(String[] args) {
-        UserStoryDao.initDatabase();
         launch(args);
     }
 
@@ -547,195 +788,8 @@ public class UC04EditUserStory extends Application {
         public String timeEstimate;
         public String priority;
         public String status;
-    }
-
-    public static class UserStoryDao {
-        private static final String JDBC_URL = "jdbc:h2:./data/agile;AUTO_SERVER=TRUE";
-
-        static {
-            try {
-                Class.forName("org.h2.Driver");
-                initDatabase();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("H2 Driver not found", e);
-            }
-        }
-
-        static void initDatabase() {
-            try (Connection c = DriverManager.getConnection(JDBC_URL)) {
-                try (Statement s = c.createStatement()) {
-                    s.executeUpdate(
-                            "CREATE TABLE IF NOT EXISTS user_story (" +
-                            "id IDENTITY PRIMARY KEY, " +
-                            "title VARCHAR(255) NOT NULL, " +
-                            "description CLOB, " +
-                            "acceptance_criteria CLOB, " +
-                            "assignee VARCHAR(120), " +
-                            "estimate_type VARCHAR(50), " +
-                            "story_points INT, " +
-                            "size VARCHAR(20), " +
-                            "time_estimate VARCHAR(120), " +
-                            "priority VARCHAR(50), " +
-                            "status VARCHAR(50), " +
-                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                            ")"
-                    );
-                    s.executeUpdate(
-                            "CREATE TABLE IF NOT EXISTS comment (" +
-                            "id IDENTITY PRIMARY KEY, " +
-                            "story_id BIGINT NOT NULL, " +
-                            "author VARCHAR(120), " +
-                            "body CLOB NOT NULL, " +
-                            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                            ")"
-                    );
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to init DB: " + e.getMessage(), e);
-            }
-        }
-
-        public long create(CreateStoryDto dto) throws SQLException {
-            String sql = "INSERT INTO user_story (title, description, acceptance_criteria, assignee, estimate_type, story_points, size, time_estimate, priority, status, created_at) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-                ps.setString(1, dto.title);
-                ps.setString(2, dto.description);
-                ps.setString(3, dto.acceptanceCriteria);
-                ps.setString(4, dto.assignee);
-                ps.setString(5, dto.estimateType);
-                if (dto.storyPoints == null) ps.setNull(6, Types.INTEGER); else ps.setInt(6, dto.storyPoints);
-                ps.setString(7, dto.size);
-                ps.setString(8, dto.timeEstimate);
-                ps.setString(9, dto.priority);
-                ps.setString(10, dto.status);
-                ps.setTimestamp(11, Timestamp.from(Instant.now()));
-
-                int affected = ps.executeUpdate();
-                if (affected == 0) throw new SQLException("Insert failed, no rows affected.");
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) return rs.getLong(1);
-                    throw new SQLException("Insert succeeded but no ID obtained.");
-                }
-            }
-        }
-
-        public Optional<CreateStoryDto> findById(long id) {
-            String sql = "SELECT title, description, acceptance_criteria, assignee, estimate_type, story_points, size, time_estimate, priority, status FROM user_story WHERE id = ?";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setLong(1, id);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        CreateStoryDto d = new CreateStoryDto();
-                        d.title = rs.getString("title");
-                        d.description = rs.getString("description");
-                        d.acceptanceCriteria = rs.getString("acceptance_criteria");
-                        d.assignee = rs.getString("assignee");
-                        d.estimateType = rs.getString("estimate_type");
-                        int sp = rs.getInt("story_points");
-                        d.storyPoints = rs.wasNull() ? null : sp;
-                        d.size = rs.getString("size");
-                        d.timeEstimate = rs.getString("time_estimate");
-                        d.priority = rs.getString("priority");
-                        d.status = rs.getString("status");
-                        return Optional.of(d);
-                    } else return Optional.empty();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                return Optional.empty();
-            }
-        }
-
-        public void update(long id, CreateStoryDto dto) throws SQLException {
-            String sql = "UPDATE user_story SET title=?, description=?, acceptance_criteria=?, assignee=?, estimate_type=?, story_points=?, size=?, time_estimate=?, priority=?, status=? WHERE id=?";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-
-                ps.setString(1, dto.title);
-                ps.setString(2, dto.description);
-                ps.setString(3, dto.acceptanceCriteria);
-                ps.setString(4, dto.assignee);
-                ps.setString(5, dto.estimateType);
-                if (dto.storyPoints == null) ps.setNull(6, Types.INTEGER); else ps.setInt(6, dto.storyPoints);
-                ps.setString(7, dto.size);
-                ps.setString(8, dto.timeEstimate);
-                ps.setString(9, dto.priority);
-                ps.setString(10, dto.status);
-                ps.setLong(11, id);
-
-                ps.executeUpdate();
-            }
-        }
-
-        public void delete(long id) throws SQLException {
-            String sql = "DELETE FROM user_story WHERE id = ?";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setLong(1, id);
-                ps.executeUpdate();
-            }
-        }
-
-        public List<CommentDto> listComments(long storyId) {
-            if (storyId <= 0) return Collections.emptyList();
-            String sql = "SELECT id, author, body, created_at FROM comment WHERE story_id = ? ORDER BY created_at ASC";
-            List<CommentDto> out = new ArrayList<>();
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setLong(1, storyId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        CommentDto d = new CommentDto();
-                        d.id = rs.getLong("id");
-                        d.storyId = storyId;
-                        d.author = rs.getString("author");
-                        d.body = rs.getString("body");
-                        Timestamp ts = rs.getTimestamp("created_at");
-                        d.createdAt = ts == null ? Instant.now() : ts.toInstant();
-                        out.add(d);
-                    }
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            return out;
-        }
-
-        public void addComment(long storyId, String author, String body) throws SQLException {
-            if (storyId <= 0) throw new IllegalArgumentException("Invalid story id");
-            String sql = "INSERT INTO comment (story_id, author, body, created_at) VALUES (?, ?, ?, ?)";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setLong(1, storyId);
-                ps.setString(2, author);
-                ps.setString(3, body);
-                ps.setTimestamp(4, Timestamp.from(Instant.now()));
-                ps.executeUpdate();
-            }
-        }
-
-        public void updateComment(long id, String body) throws SQLException {
-            String sql = "UPDATE comment SET body=? WHERE id=?";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setString(1, body);
-                ps.setLong(2, id);
-                ps.executeUpdate();
-            }
-        }
-
-        public void deleteComment(long id) throws SQLException {
-            String sql = "DELETE FROM comment WHERE id=?";
-            try (Connection c = DriverManager.getConnection(JDBC_URL);
-                 PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setLong(1, id);
-                ps.executeUpdate();
-            }
-        }
+        public Boolean mvp;
+        public Boolean sprintReady;
     }
 
     public static class CommentDto {
@@ -743,6 +797,6 @@ public class UC04EditUserStory extends Application {
         public long storyId;
         public String author;
         public String body;
-        public Instant createdAt;
+        public String createdAt;
     }
 }

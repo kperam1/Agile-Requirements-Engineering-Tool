@@ -6,4 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserStoryRepository extends JpaRepository<UserStory, Long> {
+    int countBySprintReadyTrue();
+    long countByStatusIgnoreCase(String status);
+    
+
 }
+

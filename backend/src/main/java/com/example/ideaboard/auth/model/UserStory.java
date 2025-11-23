@@ -21,9 +21,14 @@ public class UserStory {
 
     private String assignedTo;
 
-    private String priority;      
-    private String status;        
-    private Integer storyPoints; 
+    private String priority;
+    private String status;
+    private Integer storyPoints;
+
+    private Boolean mvp;
+
+    @Column(name = "sprint_ready")
+    private Boolean sprintReady;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -38,7 +43,6 @@ public class UserStory {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 
     public Long getId() {
         return id;
@@ -102,6 +106,22 @@ public class UserStory {
 
     public void setStoryPoints(Integer storyPoints) {
         this.storyPoints = storyPoints;
+    }
+
+    public Boolean getMvp() {
+        return mvp;
+    }
+
+    public void setMvp(Boolean mvp) {
+        this.mvp = mvp;
+    }
+
+    public Boolean getSprintReady() {
+        return sprintReady;
+    }
+
+    public void setSprintReady(Boolean sprintReady) {
+        this.sprintReady = sprintReady;
     }
 
     public LocalDateTime getCreatedAt() {
