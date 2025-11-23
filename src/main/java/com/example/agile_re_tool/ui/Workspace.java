@@ -85,6 +85,12 @@ public class Workspace extends Application {
             root.setCenter(currentView[0]);
         });
 
+        sprintBtn.setOnAction(e -> {
+            SprintBoardView sprintBoardView = new SprintBoardView();
+            currentView[0] = sprintBoardView.getView();
+            root.setCenter(currentView[0]);
+        });
+
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(
                 getClass().getResource("/styles/workspace.css").toExternalForm()
