@@ -1,6 +1,7 @@
 package com.example.agile_re_tool.ui;
 
 import com.example.agile_re_tool.UC04EditUserStory;
+import com.example.agile_re_tool.UC03CreateUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -21,6 +22,7 @@ import java.net.http.HttpResponse;
 public class BacklogView {
 
     private VBox backlogList;
+    private JSONArray fullData = new JSONArray();
 
     public BorderPane getView() {
         BorderPane root = new BorderPane();
@@ -53,8 +55,15 @@ public class BacklogView {
         root.setTop(header);
         root.setCenter(scrollPane);
 
-        loadUserStories();
+        filterBtn.setOnAction(e -> openFilterDialog());
+        searchField.textProperty().addListener((obs, oldV, newV) -> applySearch(newV));
 
+        createBtn.setOnAction(e -> {
+            UC03CreateUserStory creator = new UC03CreateUserStory();
+            creator.openWindow();
+        });
+
+        loadUserStories();
         return root;
     }
 
@@ -62,19 +71,15 @@ public class BacklogView {
         new Thread(() -> {
             try {
                 HttpClient client = HttpClient.newHttpClient();
-
                 HttpRequest req = HttpRequest.newBuilder()
                         .uri(URI.create("http://localhost:8080/api/userstories"))
                         .GET()
                         .build();
 
-                HttpResponse<String> response =
-                        client.send(req, HttpResponse.BodyHandlers.ofString());
-
+                HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> updateUI(response.body()));
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -82,33 +87,122 @@ public class BacklogView {
     }
 
     private void updateUI(String json) {
+        fullData = new JSONArray(json);
+        renderList(fullData);
+    }
+
+    private void renderList(JSONArray data) {
         backlogList.getChildren().clear();
 
-        JSONArray arr = new JSONArray(json);
-
-        if (arr.length() == 0) {
-            Label empty = new Label("No backlog items yet.");
+        if (data.length() == 0) {
+            Label empty = new Label("No backlog items match.");
             empty.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
             empty.setPadding(new Insets(20));
             backlogList.getChildren().add(empty);
             return;
         }
 
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject obj = arr.getJSONObject(i);
-
-            long id = obj.getLong("id");
-            String title = obj.optString("title", "Untitled");
-            String desc = obj.optString("description", "");
-            int points = obj.optInt("storyPoints", 0);
-            String assignee = obj.optString("assignedTo", "");
-            String priority = obj.optString("priority", "Medium");
-            String status = obj.optString("status", "To Do");
-
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject obj = data.getJSONObject(i);
             backlogList.getChildren().add(
-                    createCard(id, title, desc, points, assignee, priority, status)
+                    createCard(
+                            obj.getLong("id"),
+                            obj.optString("title", "Untitled"),
+                            obj.optString("description", ""),
+                            obj.optInt("storyPoints", 0),
+                            obj.optString("assignedTo", ""),
+                            obj.optString("priority", "Medium"),
+                            obj.optString("status", "To Do")
+                    )
             );
         }
+    }
+
+    private void applySearch(String keyword) {
+        if (keyword == null) keyword = "";
+        keyword = keyword.toLowerCase().trim();
+
+        if (keyword.isEmpty()) {
+            renderList(fullData);
+            return;
+        }
+
+        JSONArray result = new JSONArray();
+
+        for (int i = 0; i < fullData.length(); i++) {
+            JSONObject obj = fullData.getJSONObject(i);
+
+            String title = obj.optString("title", "").toLowerCase();
+            String desc = obj.optString("description", "").toLowerCase();
+            String assignee = obj.optString("assignedTo", "").toLowerCase();
+            String priority = obj.optString("priority", "").toLowerCase();
+            String status = obj.optString("status", "").toLowerCase();
+            String points = String.valueOf(obj.optInt("storyPoints", 0));
+
+            boolean match =
+                    title.contains(keyword) ||
+                    desc.contains(keyword) ||
+                    assignee.contains(keyword) ||
+                    priority.contains(keyword) ||
+                    status.contains(keyword) ||
+                    points.contains(keyword);
+
+            if (match) result.put(obj);
+        }
+
+        renderList(result);
+    }
+
+    private void openFilterDialog() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Filter Backlog");
+
+        ComboBox<String> statusBox = new ComboBox<>();
+        statusBox.getItems().addAll("All", "To Do", "In Progress", "Done");
+        statusBox.setValue("All");
+
+        ComboBox<String> priorityBox = new ComboBox<>();
+        priorityBox.getItems().addAll("All", "Low", "Medium", "High");
+        priorityBox.setValue("All");
+
+        ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        ButtonType clearBtn = new ButtonType("Clear", ButtonBar.ButtonData.BACK_PREVIOUS);
+
+        dialog.getDialogPane().getButtonTypes().addAll(applyBtn, clearBtn, ButtonType.CANCEL);
+
+        VBox content = new VBox(15,
+                new Label("Status:"), statusBox,
+                new Label("Priority:"), priorityBox
+        );
+        content.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == applyBtn) applyFilter(statusBox.getValue(), priorityBox.getValue());
+            else if (btn == clearBtn) renderList(fullData);
+            return null;
+        });
+
+        dialog.showAndWait();
+    }
+
+    private void applyFilter(String status, String priority) {
+        JSONArray filtered = new JSONArray();
+
+        for (int i = 0; i < fullData.length(); i++) {
+            JSONObject obj = fullData.getJSONObject(i);
+
+            boolean matchStatus = status.equals("All") ||
+                    obj.optString("status", "").equalsIgnoreCase(status);
+
+            boolean matchPriority = priority.equals("All") ||
+                    obj.optString("priority", "").equalsIgnoreCase(priority);
+
+            if (matchStatus && matchPriority) filtered.put(obj);
+        }
+
+        renderList(filtered);
     }
 
     private VBox createCard(long id, String title, String desc, int points,

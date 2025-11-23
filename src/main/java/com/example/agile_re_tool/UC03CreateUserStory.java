@@ -28,7 +28,7 @@ public class UC03CreateUserStory extends Application {
     private List<String> tshirtSizes = List.of();
     private int defaultStoryPoints = 3;
     private String defaultPriority = "Medium";
-    private String defaultStatus = "To Do";
+    private String defaultStatus = "Backlog";
 
     private static final List<Integer> FIBONACCI_POINTS = List.of(1, 2, 3, 5, 8, 13, 21);
 
@@ -97,7 +97,7 @@ public class UC03CreateUserStory extends Application {
         priorityCombo.getSelectionModel().select(defaultPriority);
 
         ComboBox<String> statusCombo = new ComboBox<>();
-        statusCombo.getItems().addAll("To Do", "In Progress", "Testing", "Done");
+        statusCombo.getItems().addAll("Backlog", "To Do", "In Progress", "Testing", "Done");
         statusCombo.getSelectionModel().select(defaultStatus);
 
         GridPane grid = new GridPane();
@@ -277,6 +277,17 @@ public class UC03CreateUserStory extends Application {
             a.setHeaderText(null);
             a.showAndWait();
         });
+    }
+
+    public void openWindow() {
+        Stage stage = new Stage();
+        stage.setTitle("UC-03 - Create User Story");
+
+        try {
+            start(stage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

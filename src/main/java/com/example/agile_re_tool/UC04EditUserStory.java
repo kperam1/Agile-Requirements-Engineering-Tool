@@ -254,7 +254,6 @@ public class UC04EditUserStory extends Application {
                 assignedHeader, assignedCard
         );
 
-        // Comments Section
         Label commentsHeader = new Label("Comments");
         commentsHeader.setStyle("-fx-font-weight: 700; -fx-font-size: 14;");
 
@@ -415,7 +414,6 @@ public class UC04EditUserStory extends Application {
         buttonsRow.setPadding(new Insets(12));
         buttonsRow.setAlignment(Pos.CENTER_RIGHT);
 
-        // Layout: left column includes form + comments; right column is meta
         VBox leftWithComments = new VBox(16, leftColumn, commentsBox);
         leftWithComments.setPadding(new Insets(12));
 
@@ -682,7 +680,6 @@ public class UC04EditUserStory extends Application {
             }
         }
 
-        // Comments DAO
         public List<CommentDto> listComments(long storyId) {
             if (storyId <= 0) return Collections.emptyList();
             String sql = "SELECT id, author, body, created_at FROM comment WHERE story_id = ? ORDER BY created_at ASC";
