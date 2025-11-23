@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import org.json.JSONObject;
 
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -26,6 +27,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.json.JSONObject;
 
 
 public class UC03CreateUserStory extends Application {
@@ -60,49 +62,31 @@ public class UC03CreateUserStory extends Application {
 
 
        TextArea acceptanceArea = new TextArea();
-       acceptanceArea.setPromptText("Enter acceptance criteria (e.g., Given... When... Then...)");
+       acceptanceArea.setPromptText("Enter acceptance criteria");
        acceptanceArea.setPrefRowCount(2);
 
 
        ComboBox<String> assigneeCombo = new ComboBox<>();
        assigneeCombo.getItems().setAll(assignees);
        assigneeCombo.setPromptText("Select assignee");
-       assigneeCombo.setMaxWidth(Double.MAX_VALUE);
-       assigneeCombo.setButtonCell(new ListCell<>() {
-           @Override
-           protected void updateItem(String item, boolean empty) {
-               super.updateItem(item, empty);
-               if (empty || item == null) {
-                   setText(assigneeCombo.getPromptText());
-                   setStyle("-fx-text-fill: #6b7280; -fx-font-style: italic;");
-               } else {
-                   setText(item);
-                   setStyle("-fx-text-fill: -fx-text-base-color;");
-               }
-           }
-       });
 
 
        ComboBox<String> estimateTypeCombo = new ComboBox<>();
        estimateTypeCombo.getItems().setAll(estimateTypes);
        estimateTypeCombo.setPromptText("Estimate Type");
-       if (!estimateTypes.isEmpty()) {
-           estimateTypeCombo.getSelectionModel().select(0);
-       }
+       if (!estimateTypes.isEmpty()) estimateTypeCombo.getSelectionModel().select(0);
 
 
        ComboBox<Integer> pointsCombo = new ComboBox<>();
        pointsCombo.getItems().setAll(FIBONACCI_POINTS);
-       pointsCombo.setPromptText("Story Points");
 
 
        ComboBox<String> tshirtCombo = new ComboBox<>();
        tshirtCombo.getItems().setAll(tshirtSizes);
-       tshirtCombo.setPromptText("T-shirt size");
 
 
        TextField timeEstimateField = new TextField();
-       timeEstimateField.setPromptText("e.g., 4 hours, 2 days");
+       timeEstimateField.setPromptText("e.g., 4 hours");
 
 
        HBox estimateControlsBox = new HBox(8);
@@ -110,9 +94,9 @@ public class UC03CreateUserStory extends Application {
        updateEstimateControls(estimateControlsBox, estimateTypeCombo.getValue(), pointsCombo, tshirtCombo, timeEstimateField);
 
 
-       estimateTypeCombo.setOnAction(e ->
-               updateEstimateControls(estimateControlsBox, estimateTypeCombo.getValue(), pointsCombo, tshirtCombo, timeEstimateField)
-       );
+       estimateTypeCombo.setOnAction(e -> {
+           updateEstimateControls(estimateControlsBox, estimateTypeCombo.getValue(), pointsCombo, tshirtCombo, timeEstimateField);
+       });
 
 
        ComboBox<String> priorityCombo = new ComboBox<>();
@@ -125,56 +109,14 @@ public class UC03CreateUserStory extends Application {
        statusCombo.getSelectionModel().select(defaultStatus);
 
 
-       BooleanProperty mvpSelected = new SimpleBooleanProperty(false);
-
-
-       StackPane mvpSwitch = new StackPane();
-       mvpSwitch.setPrefSize(52, 28);
-       mvpSwitch.setMaxSize(52, 28);
-       mvpSwitch.setStyle("-fx-background-color: #e5e7eb; -fx-background-radius: 14; -fx-cursor: hand;");
-
-
-       Circle thumb = new Circle(11);
-       thumb.setFill(Color.WHITE);
-       DropShadow shadow = new DropShadow();
-       shadow.setRadius(5);
-       shadow.setOffsetX(0);
-       shadow.setOffsetY(1);
-       shadow.setColor(Color.rgb(15, 23, 42, 0.3));
-       thumb.setEffect(shadow);
-       thumb.setTranslateX(-11);
-
-
-       mvpSwitch.getChildren().add(thumb);
-
-
-       mvpSelected.addListener((obs, oldV, newV) -> {
-           if (newV) {
-               mvpSwitch.setStyle("-fx-background-color: #22c55e; -fx-background-radius: 14; -fx-cursor: hand;");
-               thumb.setTranslateX(11);
-           } else {
-               mvpSwitch.setStyle("-fx-background-color: #e5e7eb; -fx-background-radius: 14; -fx-cursor: hand;");
-               thumb.setTranslateX(-11);
-           }
-       });
-
-
-       mvpSwitch.setOnMouseClicked(e -> mvpSelected.set(!mvpSelected.get()));
-
-
-       Label mvpTitle = new Label("Mark as MVP");
-       mvpTitle.setStyle("-fx-font-weight: 600; -fx-text-fill: #111827;");
-
-
-       Label mvpSubtitle = new Label("Use this for stories that are required for the first release.");
-       mvpSubtitle.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 11;");
-
-
-       VBox mvpTextBox = new VBox(2, mvpTitle, mvpSubtitle);
-
-
-       HBox mvpBox = new HBox(12, mvpSwitch, mvpTextBox);
+       ToggleButton mvpToggle = createToggle();
+       HBox mvpBox = new HBox(12, new Label("MVP"), mvpToggle, new Label("Mark as MVP"));
        mvpBox.setAlignment(Pos.CENTER_LEFT);
+
+
+       ToggleButton sprintToggle = createToggle();
+       HBox sprintBox = new HBox(12, new Label("Sprint Ready"), sprintToggle, new Label("Ready for Sprint"));
+       sprintBox.setAlignment(Pos.CENTER_LEFT);
 
 
        GridPane grid = new GridPane();
@@ -197,17 +139,16 @@ public class UC03CreateUserStory extends Application {
        grid.add(new Label("Description"), 0, r); grid.add(descriptionArea, 1, r++);
        grid.add(new Label("Acceptance Criteria"), 0, r); grid.add(acceptanceArea, 1, r++);
        grid.add(new Label("Assignee"), 0, r); grid.add(assigneeCombo, 1, r++);
-       grid.add(new Label("Estimate"), 0, r);
-       grid.add(new VBox(8, estimateTypeCombo, estimateControlsBox), 1, r++);
+       grid.add(new Label("Estimate"), 0, r); grid.add(new VBox(8, estimateTypeCombo, estimateControlsBox), 1, r++);
        grid.add(new Label("Priority"), 0, r); grid.add(priorityCombo, 1, r++);
        grid.add(new Label("Status"), 0, r); grid.add(statusCombo, 1, r++);
        grid.add(new Label("MVP"), 0, r); grid.add(mvpBox, 1, r++);
+       grid.add(new Label("Sprint Ready"), 0, r); grid.add(sprintBox, 1, r++);
 
 
        Button cancelBtn = new Button("Cancel");
        Button addBtn = new Button("Add Task");
        addBtn.setDefaultButton(true);
-       cancelBtn.setCancelButton(true);
 
 
        HBox buttons = new HBox(10, cancelBtn, addBtn);
@@ -219,11 +160,7 @@ public class UC03CreateUserStory extends Application {
        heading.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
 
-       Label subText = new Label("Create a new story for the selected idea.");
-       subText.setStyle("-fx-text-fill: #6b7280;");
-
-
-       VBox root = new VBox(12, heading, subText, grid, buttons);
+       VBox root = new VBox(12, heading, grid, buttons);
        root.setPadding(new Insets(16));
        root.setPrefWidth(760);
 
@@ -232,26 +169,9 @@ public class UC03CreateUserStory extends Application {
 
 
        addBtn.setOnAction(e -> {
-           if (titleField.getText() == null || titleField.getText().isBlank()) {
+           if (titleField.getText().isBlank()) {
                showAlert(Alert.AlertType.ERROR, "Validation error", "Title is required");
                return;
-           }
-
-
-           String estimateType = estimateTypeCombo.getValue();
-           int storyPoints = defaultStoryPoints;
-
-
-           if ("Story Points".equals(estimateType) && pointsCombo.getValue() != null) {
-               storyPoints = pointsCombo.getValue();
-           } else if ("T-shirt Sizes".equals(estimateType) && tshirtCombo.getValue() != null) {
-               switch (tshirtCombo.getValue()) {
-                   case "XS" -> storyPoints = 1;
-                   case "S" -> storyPoints = 2;
-                   case "M" -> storyPoints = 3;
-                   case "L" -> storyPoints = 5;
-                   case "XL" -> storyPoints = 8;
-               }
            }
 
 
@@ -262,8 +182,28 @@ public class UC03CreateUserStory extends Application {
            json.put("assignedTo", assigneeCombo.getValue());
            json.put("priority", priorityCombo.getValue());
            json.put("status", statusCombo.getValue());
+           json.put("mvp", mvpToggle.isSelected());
+           json.put("sprintReady", sprintToggle.isSelected());
+
+
+           String estType = estimateTypeCombo.getValue();
+           int storyPoints = defaultStoryPoints;
+
+
+           if ("Story Points".equals(estType) && pointsCombo.getValue() != null)
+               storyPoints = pointsCombo.getValue();
+           else if ("T-shirt Sizes".equals(estType) && tshirtCombo.getValue() != null) {
+               switch (tshirtCombo.getValue()) {
+                   case "XS" -> storyPoints = 1;
+                   case "S" -> storyPoints = 2;
+                   case "M" -> storyPoints = 3;
+                   case "L" -> storyPoints = 5;
+                   case "XL" -> storyPoints = 8;
+               }
+           }
+
+
            json.put("storyPoints", storyPoints);
-           json.put("mvp", mvpSelected.get());
 
 
            new Thread(() -> {
@@ -276,37 +216,57 @@ public class UC03CreateUserStory extends Application {
                            .build();
 
 
-                   HttpResponse<String> response =
-                           client.send(request, HttpResponse.BodyHandlers.ofString());
+                   HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 
                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                       showAlert(Alert.AlertType.INFORMATION, "Success",
-                               "User story created successfully.");
+                       showAlert(Alert.AlertType.INFORMATION, "Success", "User story created.");
                        Platform.runLater(primaryStage::close);
                    } else {
-                       showAlert(Alert.AlertType.ERROR, "Error",
-                               "Server error (" + response.statusCode() + ")");
+                       showAlert(Alert.AlertType.ERROR, "Error", "Server error (" + response.statusCode() + ")");
                    }
                } catch (Exception ex) {
                    ex.printStackTrace();
-                   showAlert(Alert.AlertType.ERROR, "Error",
-                           "Could not connect: " + ex.getMessage());
+                   showAlert(Alert.AlertType.ERROR, "Error", ex.getMessage());
                }
            }).start();
        });
 
 
        Scene scene = new Scene(root);
-       try {
-           String css = Optional.ofNullable(getClass().getResource("/uc03-style.css"))
-                   .map(u -> u.toExternalForm()).orElse(null);
-           if (css != null) scene.getStylesheets().add(css);
-       } catch (Exception ignored) {}
-
-
        primaryStage.setScene(scene);
        primaryStage.show();
+   }
+
+
+   private ToggleButton createToggle() {
+       ToggleButton t = new ToggleButton();
+       t.setPrefWidth(50);
+       t.setPrefHeight(24);
+       t.setStyle("-fx-background-color: #d1d5db; -fx-background-radius: 20; -fx-padding: 0;");
+       Pane knob = new Pane();
+       knob.setStyle("-fx-background-color: white; -fx-background-radius: 20;");
+       knob.setPrefSize(22, 22);
+       knob.setTranslateX(2);
+
+
+       StackPane container = new StackPane(knob);
+       container.setPrefSize(50, 24);
+       t.setGraphic(container);
+
+
+       t.selectedProperty().addListener((obs, oldV, newV) -> {
+           if (newV) {
+               t.setStyle("-fx-background-color: #4ade80; -fx-background-radius: 20;");
+               knob.setTranslateX(26);
+           } else {
+               t.setStyle("-fx-background-color: #d1d5db; -fx-background-radius: 20;");
+               knob.setTranslateX(2);
+           }
+       });
+
+
+       return t;
    }
 
 
@@ -319,7 +279,7 @@ public class UC03CreateUserStory extends Application {
        switch (mode) {
            case "Story Points" -> container.getChildren().addAll(new Label("Story Points:"), pointsCombo);
            case "T-shirt Sizes" -> container.getChildren().addAll(new Label("Size:"), tshirtCombo);
-           case "Time" -> container.getChildren().addAll(new Label("Time Estimate:"), timeEstimateField);
+           case "Time" -> container.getChildren().addAll(new Label("Time:"), timeEstimateField);
        }
    }
 
@@ -333,8 +293,7 @@ public class UC03CreateUserStory extends Application {
 
        String a = p.getProperty("assignees");
        if (a != null && !a.isBlank()) {
-           assignees = Arrays.stream(a.split(","))
-                   .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+           assignees = Arrays.stream(a.split(",")).map(String::trim).toList();
        }
        if (assignees.isEmpty()) assignees = List.of("Alice", "Bob", "Charlie");
 
@@ -365,11 +324,7 @@ public class UC03CreateUserStory extends Application {
    public void openWindow() {
        Stage stage = new Stage();
        stage.setTitle("UC-03 - Create User Story");
-       try {
-           start(stage);
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
+       try { start(stage); } catch (Exception e) { e.printStackTrace(); }
    }
 
 
