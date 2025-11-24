@@ -156,29 +156,4 @@
   -fx-text-fill: #6b7280;
 }
 
-.toggle-button.mvp-toggle {
-  -fx-background-radius: 8px;
-  -fx-padding: 6 10;
-  -fx-min-height: 28px;
-  -fx-background-color: linear-gradient(#f3f9ff, #eef6ff);
-  -fx-border-color: transparent;
-  -fx-text-fill: #0f1724;
-  -fx-font-weight: 600;
-  -fx-font-size: 13px;
-  -fx-effect: dropshadow(gaussian, rgba(16,24,40,0.03), 4, 0.0, 0, 1);
-}
-
-.toggle-button.mvp-toggle:hover {
-  -fx-background-color: linear-gradient(#e8f6ff, #dff0ff);
-}
-
-.toggle-button.mvp-toggle:selected {
-  -fx-background-color: linear-gradient(#0ea5e9, #0077cc);
-  -fx-text-fill: white;
-}
-
-.toggle-button.mvp-toggle:selected:hover {
-  -fx-background-color: linear-gradient(#0ca3e0, #006bb0);
-}
-
 
