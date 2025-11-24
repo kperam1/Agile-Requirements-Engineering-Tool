@@ -39,6 +39,11 @@ public class DashboardView {
         loadSprintData();
     }
 
+    public void refresh() {
+        loadDashboardData();
+        loadSprintData();
+    }
+
     public BorderPane getView() {
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets(20));
@@ -241,6 +246,15 @@ public class DashboardView {
         });
 
         VBox backlogCard = createActionCard("Prioritize Backlog", "Reorder stories by business value", "card-yellow");
+        backlogCard.setOnMouseClicked(e -> {
+            BacklogView view = new BacklogView();
+            Stage stage = new Stage();
+            stage.setTitle("Backlog");
+            Scene scene = new Scene(view.getView(), 900, 600);
+            stage.setScene(scene);
+            stage.show();
+        });
+
         VBox reportCard = createActionCard("Generate Reports", "View velocity and burndown charts", "card-green");
 
         box.getChildren().addAll(ideaCard, storyCard, backlogCard, reportCard);

@@ -29,6 +29,8 @@ public class UC04EditUserStory extends Application {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
+    private final Runnable onStoryChanged;
+
     private List<String> assignees = List.of();
     private List<String> estimateTypes = List.of();
     private List<String> tshirtSizes = List.of();
@@ -40,10 +42,17 @@ public class UC04EditUserStory extends Application {
 
     private long editingId;
 
-    public UC04EditUserStory() {}
+    public UC04EditUserStory() {
+        this(0L, null);
+    }
 
     public UC04EditUserStory(long storyId) {
+        this(storyId, null);
+    }
+
+    public UC04EditUserStory(long storyId, Runnable onStoryChanged) {
         this.editingId = storyId;
+        this.onStoryChanged = onStoryChanged;
     }
 
     public void openWindow() {
@@ -57,7 +66,7 @@ public class UC04EditUserStory extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle(editingId > 0 ? "UC-04 - Edit User Story #" + editingId
+        primaryStage.setTitle(editingId > 0 ? "Edit User Story #" + editingId
                 : "UC-04 - Edit User Story");
 
         loadConfig();
@@ -190,7 +199,7 @@ public class UC04EditUserStory extends Application {
         statusCombo.getItems().addAll("Backlog", "To Do", "In Progress", "Testing", "Done");
         statusCombo.setMaxWidth(Double.MAX_VALUE);
         statusCombo.getSelectionModel().select(
-            Optional.ofNullable(existing.status).orElse(defaultStatus)
+                Optional.ofNullable(existing.status).orElse(defaultStatus)
         );
 
         VBox compactEstimateBox = new VBox(8);
@@ -493,6 +502,9 @@ public class UC04EditUserStory extends Application {
                 new Thread(() -> {
                     try {
                         deleteStory(editingId);
+                        if (onStoryChanged != null) {
+                            Platform.runLater(onStoryChanged);
+                        }
                         showAlert(Alert.AlertType.INFORMATION, "Deleted", "Task deleted.");
                         Platform.runLater(primaryStage::close);
                     } catch (Exception ex) {
@@ -534,6 +546,9 @@ public class UC04EditUserStory extends Application {
                 try {
                     if (editingId > 0) {
                         updateStory(editingId, dto);
+                        if (onStoryChanged != null) {
+                            Platform.runLater(onStoryChanged);
+                        }
                         showAlert(Alert.AlertType.INFORMATION, "Success", "User story updated (id=" + editingId + ")");
                     } else {
                         showAlert(Alert.AlertType.WARNING, "Warning", "No valid id – cannot update backend.");

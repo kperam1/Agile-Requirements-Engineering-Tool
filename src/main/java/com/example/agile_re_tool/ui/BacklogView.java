@@ -24,6 +24,9 @@ public class BacklogView {
     private VBox backlogList;
     private JSONArray fullData = new JSONArray();
 
+    public BacklogView() {
+    }
+
     public BorderPane getView() {
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
@@ -55,10 +58,15 @@ public class BacklogView {
 
         filterBtn.setOnAction(e -> openFilterDialog());
         searchField.textProperty().addListener((obs, o, n) -> applySearch(n));
-        createBtn.setOnAction(e -> new UC03CreateUserStory().openWindow());
+
+        createBtn.setOnAction(e -> new UC03CreateUserStory(this::refresh).openWindow());
 
         loadUserStories();
         return root;
+    }
+
+    public void refresh() {
+        loadUserStories();
     }
 
     private void loadUserStories() {
@@ -77,21 +85,20 @@ public class BacklogView {
         }).start();
     }
 
-private void updateUI(String json) {
-    fullData = new JSONArray(json);
+    private void updateUI(String json) {
+        fullData = new JSONArray(json);
 
-    JSONArray onlyBacklog = new JSONArray();
-    for (int i = 0; i < fullData.length(); i++) {
-        JSONObject obj = fullData.getJSONObject(i);
-        String status = obj.optString("status", "").trim().toLowerCase();
-        if (status.equals("backlog")) {
-            onlyBacklog.put(obj);
+        JSONArray onlyBacklog = new JSONArray();
+        for (int i = 0; i < fullData.length(); i++) {
+            JSONObject obj = fullData.getJSONObject(i);
+            String status = obj.optString("status", "").trim().toLowerCase();
+            if (status.equals("backlog")) {
+                onlyBacklog.put(obj);
+            }
         }
+
+        renderList(onlyBacklog);
     }
-
-    renderList(onlyBacklog);
-}
-
 
     private void renderList(JSONArray data) {
         backlogList.getChildren().clear();
@@ -126,7 +133,7 @@ private void updateUI(String json) {
         keyword = keyword.toLowerCase().trim();
 
         if (keyword.isEmpty()) {
-            renderList(fullData);
+            updateUI(fullData.toString());
             return;
         }
 
@@ -174,7 +181,7 @@ private void updateUI(String json) {
 
         dialog.setResultConverter(btn -> {
             if (btn == applyBtn) applyFilter(statusBox.getValue(), priorityBox.getValue());
-            else if (btn == clearBtn) renderList(fullData);
+            else if (btn == clearBtn) updateUI(fullData.toString());
             return null;
         });
 
@@ -219,6 +226,15 @@ private void updateUI(String json) {
         sprintBadge.setStyle("-fx-background-color:#38bdf8; -fx-text-fill:white; -fx-padding:4 10; -fx-background-radius:12; -fx-font-size:11;");
         sprintBadge.setVisible(sprintReady);
 
+        FlowPane badges = new FlowPane();
+        badges.setHgap(8);
+        badges.setVgap(8);
+        badges.setPrefWrapLength(600);
+        badges.getChildren().add(statusBadge);
+        badges.getChildren().add(priorityBadge);
+        if (mvp) badges.getChildren().add(mvpBadge);
+        if (sprintReady) badges.getChildren().add(sprintBadge);
+
         Label titleLabel = new Label("#" + id + " • " + title);
         titleLabel.setStyle("-fx-font-size:16px; -fx-font-weight:700; -fx-text-fill:#111827;");
 
@@ -231,10 +247,7 @@ private void updateUI(String json) {
 
         Button editBtn = new Button("Edit");
         editBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-padding:6 14; -fx-background-radius:8;");
-        editBtn.setOnAction(e -> new UC04EditUserStory(id).openWindow());
-
-        HBox badges = new HBox(10, statusBadge, priorityBadge, mvpBadge, sprintBadge);
-        badges.setAlignment(Pos.CENTER_LEFT);
+        editBtn.setOnAction(e -> new UC04EditUserStory(id, this::refresh).openWindow());
 
         HBox headerRow = new HBox(12, avatarPane, titleLabel);
         headerRow.setAlignment(Pos.CENTER_LEFT);
