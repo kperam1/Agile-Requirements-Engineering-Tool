@@ -41,34 +41,51 @@ public class SprintBoardView {
         root.setStyle("-fx-background-color:#ffffff;");
 
         // Top summary cards (pixel-perfect)
-        HBox summaryCards = new HBox(32);
+            HBox summaryCards = new HBox(24);
         summaryCards.setAlignment(Pos.CENTER);
-        summaryCards.setPadding(new Insets(0,0,18,0));
+            summaryCards.setPadding(new Insets(0,0,24,0));
         summaryCards.setPrefWidth(1); // allow to grow
         summaryCards.setMaxWidth(Double.MAX_VALUE);
 
         // Card 1: Total Stories
-        VBox totalCard = buildSummaryCard(
-            "Total Stories", "0", "#2563eb", "#e0e7ff"
-        );
+            VBox totalCard = themedSummaryCard("Total Stories", "0", "#2563eb", "#e0e7ff");
         totalStories = (Label) totalCard.lookup("#summary-value");
 
-        VBox completedCard = buildSummaryCard(
-            "Completed", "0", "#10b981", "#d1fae5"
-        );
+            VBox completedCard = themedSummaryCard("Completed", "0", "#10b981", "#e0f7e9");
         completed = (Label) completedCard.lookup("#summary-value");
 
-        VBox inProgressCard = buildSummaryCard(
-            "In Progress", "0", "#f59e0b", "#fef3c7"
-        );
+            VBox inProgressCard = themedSummaryCard("In Progress", "0", "#f59e0b", "#fff7e0");
         inProgress = (Label) inProgressCard.lookup("#summary-value");
 
-        VBox pointsCard = buildSummaryCard(
-            "Story Points", "0/0", "#6366f1", "#e0e7ff"
-        );
+            VBox pointsCard = themedSummaryCard("Story Points", "0/0", "#6366f1", "#ececff");
         storyPoints = (Label) pointsCard.lookup("#summary-value");
 
         summaryCards.getChildren().addAll(totalCard, completedCard, inProgressCard, pointsCard);
+    // Themed summary card builder
+    private VBox themedSummaryCard(String label, String value, String color, String bgColor) {
+        Label labelLbl = new Label(label);
+        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:400; -fx-text-fill:#374151;");
+
+        Label valueLbl = new Label(value);
+        valueLbl.setId("summary-value");
+        valueLbl.setStyle("-fx-font-size:30px; -fx-font-weight:500; -fx-text-fill:" + color + ";");
+
+        VBox card = new VBox(6, labelLbl, valueLbl);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(18, 24, 18, 24));
+        card.setStyle(
+            "-fx-background-color:" + bgColor + "; " +
+            "-fx-background-radius:14; " +
+            "-fx-border-color:#e5e7eb; " +
+            "-fx-border-radius:14; " +
+            "-fx-border-width:1.5; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 2);"
+        );
+        card.setMinWidth(160);
+        card.setMaxWidth(220);
+        HBox.setHgrow(card, Priority.ALWAYS);
+        return card;
+    }
 
         // Sprint Progress bar
         sprintProgress = new ProgressBar(0.3);
@@ -117,30 +134,28 @@ public class SprintBoardView {
         return root;
     }
     
-    // ...existing code...
-
-    // New: Build summary card with icon and custom style
-    private VBox buildSummaryCard(String label, String value, String color, String bgColor) {
+    // Themed summary card builder
+    private VBox themedSummaryCard(String label, String value, String color, String bgColor) {
         Label labelLbl = new Label(label);
-        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:normal; -fx-text-fill:#374151; -fx-padding:0 0 0 0;");
+        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:400; -fx-text-fill:#374151;");
 
         Label valueLbl = new Label(value);
         valueLbl.setId("summary-value");
-        valueLbl.setStyle("-fx-font-size:38px; -fx-font-weight:normal; -fx-text-fill:" + color + ";");
+        valueLbl.setStyle("-fx-font-size:30px; -fx-font-weight:500; -fx-text-fill:" + color + ";");
 
-        VBox card = new VBox(4, labelLbl, valueLbl);
-        card.setAlignment(Pos.TOP_LEFT);
+        VBox card = new VBox(6, labelLbl, valueLbl);
+        card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(18, 24, 18, 24));
         card.setStyle(
             "-fx-background-color:" + bgColor + "; " +
-            "-fx-background-radius:16; " +
-            "-fx-border-color:" + color + "; " +
-            "-fx-border-radius:16; " +
-            "-fx-border-width:2; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
+            "-fx-background-radius:14; " +
+            "-fx-border-color:#e5e7eb; " +
+            "-fx-border-radius:14; " +
+            "-fx-border-width:1.5; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 2);"
         );
-        card.setMinWidth(180);
-        card.setMaxWidth(Double.MAX_VALUE);
+        card.setMinWidth(160);
+        card.setMaxWidth(220);
         HBox.setHgrow(card, Priority.ALWAYS);
         return card;
     }
@@ -390,26 +405,26 @@ public class SprintBoardView {
         HBox.setHgrow(footer.getChildren().get(1), Priority.ALWAYS);
 
         // Card container
-        VBox card = new VBox(8, topRow, header, descLbl, footer, editBtn);
-        card.setPadding(new Insets(14));
+        VBox card = new VBox(10, topRow, header, descLbl, footer, editBtn);
+        card.setPadding(new Insets(18));
         card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-background-color:#fff; -fx-background-radius:16; " +
+            "-fx-border-color:#e0e7ff; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         );
 
         // Hover effect
         card.setOnMouseEntered(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#3b82f6; -fx-border-radius:12; -fx-border-width:2; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3); " +
+            "-fx-background-color:#f3f4f6; -fx-background-radius:16; " +
+            "-fx-border-color:#2563eb; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(37,99,235,0.10), 12, 0, 0, 4); " +
             "-fx-cursor:hand;"
         ));
         card.setOnMouseExited(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-background-color:#fff; -fx-background-radius:16; " +
+            "-fx-border-color:#e0e7ff; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         ));
 
