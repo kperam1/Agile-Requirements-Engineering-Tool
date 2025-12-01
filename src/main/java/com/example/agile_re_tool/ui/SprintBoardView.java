@@ -4,7 +4,9 @@ import com.example.agile_re_tool.UC04EditUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -12,9 +14,12 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.FileWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -327,4 +332,78 @@ public class SprintBoardView {
         for (String p: parts) sb.append(p.charAt(0));
         return sb.toString().toUpperCase();
     }
+
+    private void showExportOptions() {
+
+    List<String> choices = List.of("CSV", "JSON");
+
+    ChoiceDialog<String> dialog = new ChoiceDialog<>("CSV", choices);
+    dialog.setTitle("Export Stories");
+    dialog.setHeaderText("Choose Export Format");
+    dialog.setContentText("Format:");
+
+    Optional<String> result = dialog.showAndWait();
+    if (result.isEmpty()) return;
+
+    String choice = result.get();
+
+    FileChooser fc = new FileChooser();
+    fc.setTitle("Save Exported Stories");
+
+    if (choice.equals("CSV")) {
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fc.setInitialFileName("sprint_stories.csv");
+    } else {
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+        fc.setInitialFileName("sprint_stories.json");
+    }
+
+    File file = fc.showSaveDialog(null);
+    if (file == null) return;
+
+    try {
+        JSONArray exportData = allStories;
+
+        if (choice.equals("CSV")) {
+            exportCSV(exportData, file);
+        } else {
+            exportJSON(exportData, file);
+        }
+
+        new Alert(Alert.AlertType.INFORMATION, "Export completed!").show();
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+    }
+}
+
+private void exportCSV(JSONArray stories, File file) throws Exception {
+    FileWriter writer = new FileWriter(file);
+    writer.write("id,title,description,status,assignedTo,storyPoints\n");
+
+    for (int i = 0; i < stories.length(); i++) {
+        JSONObject o = stories.getJSONObject(i);
+        writer.write(
+                o.optLong("id") + "," +
+                escape(o.optString("title")) + "," +
+                escape(o.optString("description")) + "," +
+                o.optString("status") + "," +
+                o.optString("assignedTo") + "," +
+                o.optInt("storyPoints") + "\n"
+        );
+    }
+
+    writer.close();
+}
+
+private String escape(String text) {
+    if (text == null) return "";
+    return text.replace(",", " "); 
+}
+
+private void exportJSON(JSONArray stories, File file) throws Exception {
+    FileWriter writer = new FileWriter(file);
+    writer.write(stories.toString(4)); 
+    writer.close();
+}
 }
