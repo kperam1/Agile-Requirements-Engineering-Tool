@@ -26,6 +26,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
 
+import java.io.File;
+import java.io.FileWriter;
+import javafx.stage.FileChooser;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Alert;
+
+
 public class SprintBoardView {
 
     private final VBox todoColumn = buildColumn("To Do");
@@ -54,6 +61,10 @@ public class SprintBoardView {
         refreshBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14;");
         refreshBtn.setOnAction(e -> loadStories());
 
+        Button exportBtn = new Button("Export");
+        exportBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
+        exportBtn.setOnAction(e -> showExportOptions());
+
         assigneeFilter = new ComboBox<>();
         assigneeFilter.getItems().add("All Members");
         assigneeFilter.setValue("All Members");
@@ -64,7 +75,7 @@ public class SprintBoardView {
             applyFilter();
         });
 
-        HBox header = new HBox(12, heading, new Region(), assigneeFilter, refreshBtn);
+        HBox header = new HBox(12, heading, new Region(), assigneeFilter, refreshBtn, exportBtn);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(0,0,12,0));
         HBox.setHgrow(header.getChildren().get(1), Priority.ALWAYS);
