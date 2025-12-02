@@ -83,7 +83,7 @@ public class SprintBoardView {
         progressBox.setAlignment(Pos.CENTER_LEFT);
         progressBox.setPadding(new Insets(0,0,18,0));
 
-        // Only Assignee Dropdown
+        // Assignee Dropdown
         assigneeDropdown = new ComboBox<>();
         assigneeDropdown.setPrefWidth(180);
         assigneeDropdown.setValue("All Assignees");
@@ -102,20 +102,93 @@ public class SprintBoardView {
         VBox topSection = new VBox(10, summaryCards, filterBar, progressBox);
 
         // Columns: TO DO, IN PROGRESS, TESTING, DONE
-        HBox columns = new HBox(16,
-            wrapScrollable(todoColumn),
-            wrapScrollable(inProgressColumn),
-            wrapScrollable(testingColumn),
-            wrapScrollable(doneColumn));
+        ScrollPane todoScroll = wrapScrollable(todoColumn);
+        ScrollPane inProgressScroll = wrapScrollable(inProgressColumn);
+        ScrollPane testingScroll = wrapScrollable(testingColumn);
+        ScrollPane doneScroll = wrapScrollable(doneColumn);
+
+        enableScrollDrop(todoScroll, "To Do");
+        enableScrollDrop(inProgressScroll, "In Progress");
+        enableScrollDrop(testingScroll, "Testing");
+        enableScrollDrop(doneScroll, "Done");
+
+        HBox columns = new HBox(16, todoScroll, inProgressScroll, testingScroll, doneScroll);
         columns.setPrefHeight(600);
         columns.setAlignment(Pos.TOP_LEFT);
-
         root.setTop(topSection);
         root.setCenter(columns);
-
         loadStories();
         loadAssignees();
         return root;
+    }
+
+    // Enable drop for a column
+    private void enableScrollDrop(ScrollPane scroll, String newStatus) {
+        scroll.setOnDragOver(event -> {
+            if (event.getDragboard().hasString()) {
+                event.acceptTransferModes(javafx.scene.input.TransferMode.MOVE);
+                scroll.setStyle(scroll.getStyle() + "; -fx-background-color:#e0f7fa;"); // highlight
+            }
+            event.consume();
+        });
+        scroll.setOnDragExited(event -> {
+            scroll.setStyle(scroll.getStyle().replace("; -fx-background-color:#e0f7fa;", ""));
+            event.consume();
+        });
+        scroll.setOnDragDropped(event -> {
+            javafx.scene.input.Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                long storyId = Long.parseLong(db.getString());
+                handleStoryDrop(storyId, newStatus);
+                success = true;
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    // Handle story drop 
+    private void handleStoryDrop(long storyId, String newStatus) {
+        // Find the card node for the storyId
+        VBox[] columns = {todoColumn, inProgressColumn, testingColumn, doneColumn};
+        VBox targetColumn = null;
+        switch (newStatus) {
+            case "To Do": targetColumn = todoColumn; break;
+            case "In Progress": targetColumn = inProgressColumn; break;
+            case "Testing": targetColumn = testingColumn; break;
+            case "Done": targetColumn = doneColumn; break;
+        }
+        for (VBox col : columns) {
+            for (Iterator<javafx.scene.Node> it = col.getChildren().iterator(); it.hasNext(); ) {
+                javafx.scene.Node node = it.next();
+                if (node.getUserData() != null && node.getUserData().equals(storyId)) {
+                    it.remove();
+                    if (targetColumn != null) {
+                        targetColumn.getChildren().add(node);
+                    }
+                    break;
+                }
+            }
+        }
+        // Send backend update (async)
+        Platform.runLater(() -> {
+            try {
+                HttpClient client = HttpClient.newHttpClient();
+                JSONObject payload = new JSONObject();
+                payload.put("id", storyId);
+                payload.put("status", newStatus);
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:8080/api/userstories/" + storyId + "/status"))
+                        .header("Content-Type", "application/json")
+                        .PUT(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                        .build();
+                client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .thenAccept(response -> System.out.println("Status update: " + response.body()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
     
     // Small horizontal summary card
@@ -197,7 +270,6 @@ public class SprintBoardView {
         }).start();
     }
 
-    // Fetch assignees from backend
     // Populate assignees from loaded user stories
     private void loadAssignees() {
         Platform.runLater(() -> {
@@ -276,10 +348,10 @@ public class SprintBoardView {
     }
 
     private void updateSummaryCards(int total, int completedVal, int inProgressVal, int completedPoints, int totalPoints) {
-        if (totalStories != null) totalStories.setText("Total Stories\n" + total);
-        if (completed != null) completed.setText("Completed\n" + completedVal);
-        if (inProgress != null) inProgress.setText("In Progress\n" + inProgressVal);
-        if (storyPoints != null) storyPoints.setText("Story Points\n" + completedPoints + "/" + totalPoints);
+        if (totalStories != null) totalStories.setText("Total Stories: " + total);
+        if (completed != null) completed.setText("Completed: " + completedVal);
+        if (inProgress != null) inProgress.setText("In Progress: " + inProgressVal);
+        if (storyPoints != null) storyPoints.setText("Story Points: " + completedPoints + "/" + totalPoints);
     }
 
     private void updateProgressBar(double percent) {
@@ -388,6 +460,7 @@ public class SprintBoardView {
             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         );
+        card.setUserData(id);
 
         // Hover effect
         card.setOnMouseEntered(e -> card.setStyle(
@@ -402,6 +475,19 @@ public class SprintBoardView {
             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         ));
+
+            // Enable drag for story card
+            card.setOnDragDetected(event -> {
+                javafx.scene.input.Dragboard db = card.startDragAndDrop(javafx.scene.input.TransferMode.MOVE);
+                javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+                content.putString(Long.toString(id));
+                db.setContent(content);
+                event.consume();
+            });
+
+            card.setOnDragDone(event -> {
+                event.consume();
+            });
 
         return card;
     }
