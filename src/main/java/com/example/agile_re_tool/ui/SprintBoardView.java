@@ -41,51 +41,35 @@ public class SprintBoardView {
         root.setStyle("-fx-background-color:#ffffff;");
 
         // Top summary cards (pixel-perfect)
-            HBox summaryCards = new HBox(24);
+        HBox summaryCards = new HBox(24);
         summaryCards.setAlignment(Pos.CENTER);
-            summaryCards.setPadding(new Insets(0,0,24,0));
+        summaryCards.setPadding(new Insets(0,0,24,0));
         summaryCards.setPrefWidth(1); // allow to grow
         summaryCards.setMaxWidth(Double.MAX_VALUE);
 
-        // Card 1: Total Stories
-            VBox totalCard = themedSummaryCard("Total Stories", "0", "#2563eb", "#e0e7ff");
+        // Small horizontal summary cards
+        // Use visible icons and single label per card
+        HBox totalCard = smallSummaryCard("📦", "Total Stories", "0", "#2563eb", "#e0e7ff");
         totalStories = (Label) totalCard.lookup("#summary-value");
 
-            VBox completedCard = themedSummaryCard("Completed", "0", "#10b981", "#e0f7e9");
+        HBox completedCard = smallSummaryCard("✔", "Completed", "0", "#10b981", "#e0f7e9");
         completed = (Label) completedCard.lookup("#summary-value");
 
-            VBox inProgressCard = themedSummaryCard("In Progress", "0", "#f59e0b", "#fff7e0");
+        HBox inProgressCard = smallSummaryCard("⏳", "In Progress", "0", "#f59e0b", "#fff7e0");
         inProgress = (Label) inProgressCard.lookup("#summary-value");
 
-            VBox pointsCard = themedSummaryCard("Story Points", "0/0", "#6366f1", "#ececff");
+        HBox pointsCard = smallSummaryCard("🏆", "Story Points", "0/0", "#6366f1", "#ececff");
         storyPoints = (Label) pointsCard.lookup("#summary-value");
 
-        summaryCards.getChildren().addAll(totalCard, completedCard, inProgressCard, pointsCard);
-    // Themed summary card builder
-    private VBox themedSummaryCard(String label, String value, String color, String bgColor) {
-        Label labelLbl = new Label(label);
-        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:400; -fx-text-fill:#374151;");
-
-        Label valueLbl = new Label(value);
-        valueLbl.setId("summary-value");
-        valueLbl.setStyle("-fx-font-size:30px; -fx-font-weight:500; -fx-text-fill:" + color + ";");
-
-        VBox card = new VBox(6, labelLbl, valueLbl);
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(18, 24, 18, 24));
-        card.setStyle(
-            "-fx-background-color:" + bgColor + "; " +
-            "-fx-background-radius:14; " +
-            "-fx-border-color:#e5e7eb; " +
-            "-fx-border-radius:14; " +
-            "-fx-border-width:1.5; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 2);"
-        );
-        card.setMinWidth(160);
-        card.setMaxWidth(220);
-        HBox.setHgrow(card, Priority.ALWAYS);
-        return card;
-    }
+        summaryCards.getChildren().setAll(totalCard, completedCard, inProgressCard, pointsCard);
+        summaryCards.setSpacing(16);
+        summaryCards.setAlignment(Pos.CENTER_LEFT);
+        summaryCards.setStyle("-fx-background-color:transparent;");
+        summaryCards.setPrefHeight(40);
+        summaryCards.setMaxWidth(Double.MAX_VALUE);
+        for (javafx.scene.Node card : summaryCards.getChildren()) {
+            HBox.setHgrow(card, Priority.ALWAYS);
+        }
 
         // Sprint Progress bar
         sprintProgress = new ProgressBar(0.3);
@@ -134,29 +118,27 @@ public class SprintBoardView {
         return root;
     }
     
-    // Themed summary card builder
-    private VBox themedSummaryCard(String label, String value, String color, String bgColor) {
-        Label labelLbl = new Label(label);
-        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:400; -fx-text-fill:#374151;");
+    // Small horizontal summary card
+    private HBox smallSummaryCard(String iconUnicode, String label, String value, String color, String bgColor) {
+        Label iconLbl = new Label(iconUnicode);
+        iconLbl.setStyle("-fx-font-size:18px; -fx-text-fill:" + color + "; -fx-font-weight:700; -fx-padding:0 8 0 0;");
 
-        Label valueLbl = new Label(value);
-        valueLbl.setId("summary-value");
-        valueLbl.setStyle("-fx-font-size:30px; -fx-font-weight:500; -fx-text-fill:" + color + ";");
+        Label labelAndValue = new Label(label + ": " + value);
+        labelAndValue.setId("summary-value");
+        labelAndValue.setStyle("-fx-font-size:16px; -fx-font-weight:600; -fx-text-fill:" + color + ";");
 
-        VBox card = new VBox(6, labelLbl, valueLbl);
+        HBox card = new HBox(8, iconLbl, labelAndValue);
         card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(18, 24, 18, 24));
+        card.setPadding(new Insets(8, 16, 8, 16));
         card.setStyle(
             "-fx-background-color:" + bgColor + "; " +
-            "-fx-background-radius:14; " +
-            "-fx-border-color:#e5e7eb; " +
-            "-fx-border-radius:14; " +
-            "-fx-border-width:1.5; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 2);"
+            "-fx-background-radius:12; " +
+            "-fx-border-color:transparent; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 1);"
         );
-        card.setMinWidth(160);
-        card.setMaxWidth(220);
-        HBox.setHgrow(card, Priority.ALWAYS);
+        card.setMinHeight(32);
+        card.setMaxHeight(40);
+        card.setMaxWidth(Double.MAX_VALUE);
         return card;
     }
 
@@ -203,6 +185,7 @@ public class SprintBoardView {
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> {
                         allStories = new JSONArray(response.body());
+                        loadAssignees();
                         applyFilter();
                     });
                 } else {
@@ -215,28 +198,20 @@ public class SprintBoardView {
     }
 
     // Fetch assignees from backend
+    // Populate assignees from loaded user stories
     private void loadAssignees() {
-        new Thread(() -> {
-            try {
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest req = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/userstories/assignees"))
-                        .GET().build();
-                HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 200) {
-                    Platform.runLater(() -> {
-                        JSONArray arr = new JSONArray(response.body());
-                        assigneeDropdown.getItems().clear();
-                        assigneeDropdown.getItems().add("All Assignees");
-                        for (int i = 0; i < arr.length(); i++) {
-                            String name = arr.getString(i);
-                            assigneeDropdown.getItems().add(name);
-                        }
-                        assigneeDropdown.setValue("All Assignees");
-                    });
-                }
-            } catch (Exception ignored) {}
-        }).start();
+        Platform.runLater(() -> {
+            Set<String> assignees = new LinkedHashSet<>();
+            assignees.add("All Assignees");
+            for (int i = 0; i < allStories.length(); i++) {
+                JSONObject o = allStories.getJSONObject(i);
+                String assignee = o.optString("assignedTo", "").trim();
+                if (!assignee.isEmpty()) assignees.add(assignee);
+            }
+            assigneeDropdown.getItems().clear();
+            assigneeDropdown.getItems().addAll(assignees);
+            assigneeDropdown.setValue("All Assignees");
+        });
     }
     
     private void applyFilter() {
