@@ -123,7 +123,10 @@ public class TeamSettingsView {
         });
 
         TableColumn<User, Void> actionsCol = new TableColumn<>("Actions");
-        actionsCol.setMinWidth(150);
+        actionsCol.setMinWidth(80);   
+        actionsCol.setPrefWidth(90);  
+        actionsCol.setMaxWidth(120);  
+
 
         actionsCol.setCellFactory(col -> new TableCell<>() {
 
