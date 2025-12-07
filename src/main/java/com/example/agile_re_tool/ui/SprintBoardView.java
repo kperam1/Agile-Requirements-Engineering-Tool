@@ -62,7 +62,7 @@ public class SprintBoardView {
         refreshBtn.setOnAction(e -> loadStories());
 
         Button exportBtn = new Button("Export");
-        exportBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
+        exportBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
         exportBtn.setOnAction(e -> showExportOptions());
 
         assigneeFilter = new ComboBox<>();
