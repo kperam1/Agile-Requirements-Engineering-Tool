@@ -55,17 +55,6 @@ mysql --version
 
 ---
 
-### 5. Git
-
-**Check your Git version:**
-```bash
-git --version
-```
-
-**Expected output:** Should show Git 2.x or higher
-
----
-
 ## Getting Started
 
 ### Step 1: Clone the project
@@ -101,4 +90,5 @@ mvn javafx:run
 **Expected output:** JavaFX application window will launch
 
 ---
+
 
