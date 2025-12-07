@@ -1,3 +1,5 @@
+Project Setup
+
 ## Requirements
 
 Before running this project, ensure you have the following installed:
@@ -5,7 +7,9 @@ Before running this project, ensure you have the following installed:
 ### 1. Java 21 or higher
 
 **Check your Java version:**
+```bash
 java -version
+```
 
 **Expected output:** Should show Java 21.x or higher
 
@@ -19,7 +23,9 @@ java -version
 ### 2. Maven 3.8+
 
 **Check your Maven version:**
+```bash
 mvn --version
+```
 
 **Expected output:** Should show Maven 3.8.0 or higher
 
@@ -33,7 +39,9 @@ mvn --version
 ### 3. MySQL 8.0 or higher
 
 **Check your MySQL version:**
+```bash
 mysql --version
+```
 
 **Expected output:** Should show MySQL 8.0 or higher
 
@@ -49,13 +57,14 @@ mysql --version
 
 ---
 
-### 4. JavaFX SDK 21
+### 5. Git
 
-**Check if JavaFX is available:** (typically installed via Maven dependency)
+**Check your Git version:**
+```bash
+git --version
+```
 
-**If needed manually:**
-- Download from [JavaFX SDK](https://gluonhq.com/products/javafx/)
-- Set `JAVAFX_HOME` environment variable to the SDK location
+**Expected output:** Should show Git 2.x or higher
 
 ---
 
@@ -63,27 +72,34 @@ mysql --version
 
 ### Step 1: Clone the project
 
+```bash
 git clone https://github.com/kperam1/Agile-Requirements-Engineering-Tool.git
 cd Agile-Requirements-Engineering-Tool
+```
 
 ### Step 2: Build the project
 
+```bash
 mvn clean install -DskipTests
+```
 
 ### Step 3: Start the Spring Boot backend
 
 Open a terminal and run:
 
+```bash
 cd backend
 mvn spring-boot:run
+```
 
 ### Step 4: Start the JavaFX frontend
 
 Open a **new terminal** (keeping the backend running) and run:
 
+```bash
 mvn javafx:run
+```
 
 **Expected output:** JavaFX application window will launch
 
 ---
-
