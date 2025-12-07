@@ -1,8 +1,9 @@
 package com.example.ideaboard.controllers;
 
+import com.example.agile_re_tool.session.ProjectSession;
+import com.example.ideaboard.api.IdeaApiClient;
 import com.example.ideaboard.model.IdeaDto;
 import com.example.ideaboard.model.IdeaStatus;
-import com.example.ideaboard.api.IdeaApiClient;
 import com.example.ideaboard.util.DialogHelper;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -47,6 +48,7 @@ public class ReviewIdeasController {
 
     @FXML
     public void initialize() {
+        System.out.println("ReviewIdeasController.initialize projectId = " + ProjectSession.getProjectId());
         setupListView();
         setupSearchFilter();
         loadIdeas();
@@ -67,14 +69,43 @@ public class ReviewIdeasController {
     }
 
     private void loadIdeas() {
+        long projectId = ProjectSession.getProjectId();
+
+        if (projectId <= 0) {
+            System.out.println("⚠️ No project selected — skipping idea load");
+
+            ideasListView.getItems().clear();
+            emptyState.setVisible(true);
+            detailsCard.setVisible(false);
+            totalIdeasLabel.setText("0 Ideas");
+            activeIdeasLabel.setText("0 Active");
+
+            return;
+        }
+
         try {
-            allIdeas = apiClient.list();
-            updateStats();
+            allIdeas = apiClient.listByProject(projectId);
+
             ideasListView.getItems().setAll(allIdeas);
-            if (!allIdeas.isEmpty()) ideasListView.getSelectionModel().selectFirst();
+            updateStats();
+
+            if (!allIdeas.isEmpty()) {
+                ideasListView.getSelectionModel().selectFirst();
+                emptyState.setVisible(false);
+                detailsCard.setVisible(true);
+            } else {
+                emptyState.setVisible(true);
+                detailsCard.setVisible(false);
+            }
+
         } catch (Exception e) {
             System.err.println("Error loading ideas: " + e.getMessage());
             e.printStackTrace();
+            ideasListView.getItems().clear();
+            totalIdeasLabel.setText("0 Ideas");
+            activeIdeasLabel.setText("0 Active");
+            emptyState.setVisible(true);
+            detailsCard.setVisible(false);
         }
     }
 
@@ -89,11 +120,13 @@ public class ReviewIdeasController {
             String lower = searchText.toLowerCase();
             List<IdeaDto> filtered = allIdeas.stream()
                     .filter(idea ->
-                            idea.getTitle().toLowerCase().contains(lower) ||
-                            idea.getCategory().toLowerCase().contains(lower) ||
-                            idea.getDescription().toLowerCase().contains(lower) ||
-                            idea.getPrimaryActor().toLowerCase().contains(lower))
+                            (idea.getTitle() != null && idea.getTitle().toLowerCase().contains(lower)) ||
+                            (idea.getCategory() != null && idea.getCategory().toLowerCase().contains(lower)) ||
+                            (idea.getDescription() != null && idea.getDescription().toLowerCase().contains(lower)) ||
+                            (idea.getPrimaryActor() != null && idea.getPrimaryActor().toLowerCase().contains(lower))
+                    )
                     .collect(Collectors.toList());
+
             ideasListView.getItems().setAll(filtered);
         }
         updateStats();
@@ -102,9 +135,11 @@ public class ReviewIdeasController {
     private void updateStats() {
         int total = ideasListView.getItems().size();
         long active = ideasListView.getItems().stream()
-                .filter(idea -> idea.getStatus() == IdeaStatus.NEW ||
-                                idea.getStatus() == IdeaStatus.UNDER_REVIEW)
+                .filter(idea ->
+                        idea.getStatus() == IdeaStatus.NEW ||
+                        idea.getStatus() == IdeaStatus.UNDER_REVIEW)
                 .count();
+
         totalIdeasLabel.setText(total + (total == 1 ? " Idea" : " Ideas"));
         activeIdeasLabel.setText(active + " Active");
     }
@@ -121,8 +156,13 @@ public class ReviewIdeasController {
 
         if (idea.getCreatedAt() != null)
             createdAtLabel.setText(idea.getCreatedAt().format(dateFormatter));
+        else
+            createdAtLabel.setText("-");
+
         if (idea.getUpdatedAt() != null)
             updatedAtLabel.setText(idea.getUpdatedAt().format(dateFormatter));
+        else
+            updatedAtLabel.setText("-");
 
         updateStatusBadge(idea.getStatus());
 
@@ -160,10 +200,12 @@ public class ReviewIdeasController {
     @FXML
     private void handleApprove() {
         if (selectedIdea == null) return;
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Approve Idea");
         confirm.setHeaderText("Approve \"" + selectedIdea.getTitle() + "\"?");
         confirm.setContentText("This will mark the idea as approved.");
+
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
@@ -184,10 +226,12 @@ public class ReviewIdeasController {
     @FXML
     private void handleReject() {
         if (selectedIdea == null) return;
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Reject Idea");
         confirm.setHeaderText("Reject \"" + selectedIdea.getTitle() + "\"?");
         confirm.setContentText("This will mark the idea as rejected.");
+
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
@@ -222,36 +266,58 @@ public class ReviewIdeasController {
         updateStats();
     }
 
-    private void showToast(String message, boolean isError) {
-        StackPane root = (StackPane) detailsCard.getScene().getRoot();
-        HBox toast = new HBox();
-        toast.setAlignment(Pos.CENTER);
-        toast.getStyleClass().add("toast-notification");
-        toast.getStyleClass().add(isError ? "toast-error" : "toast-success");
+private void showToast(String message, boolean isError) {
+    Pane root = (Pane) detailsCard.getScene().getRoot();
 
-        Text text = new Text(message);
-        text.getStyleClass().add("toast-text");
-        toast.getChildren().add(text);
+    HBox toast = new HBox();
+    toast.setAlignment(Pos.CENTER);
+    toast.getStyleClass().add("toast-notification");
+    toast.getStyleClass().add(isError ? "toast-error" : "toast-success");
 
-        StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
-        StackPane.setMargin(toast, new Insets(0, 0, 40, 0));
-        root.getChildren().add(toast);
+    Text text = new Text(message);
+    text.getStyleClass().add("toast-text");
+    toast.getChildren().add(text);
 
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), toast);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
+    // Wrap toast in a StackPane overlay so it can appear at bottom center
+    StackPane overlay = new StackPane(toast);
+    overlay.setPickOnBounds(false);
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(3));
-        pause.setOnFinished(e -> {
-            FadeTransition fadeOut = new FadeTransition(Duration.millis(200), toast);
-            fadeOut.setFromValue(1);
-            fadeOut.setToValue(0);
-            fadeOut.setOnFinished(evt -> root.getChildren().remove(toast));
-            fadeOut.play();
-        });
-        pause.play();
+    StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
+    StackPane.setMargin(toast, new Insets(0, 0, 40, 0));
+
+    // Add overlay to root
+    if (root instanceof BorderPane bp) {
+        bp.getChildren().add(overlay);
+    } else if (root instanceof StackPane sp) {
+        sp.getChildren().add(overlay);
+    } else if (root instanceof Pane p) {
+        p.getChildren().add(overlay);
     }
+
+    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), overlay);
+    fadeIn.setFromValue(0);
+    fadeIn.setToValue(1);
+    fadeIn.play();
+
+    PauseTransition pause = new PauseTransition(Duration.seconds(3));
+    pause.setOnFinished(e -> {
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), overlay);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setOnFinished(evt -> {
+            if (root instanceof BorderPane bp2) {
+                bp2.getChildren().remove(overlay);
+            } else if (root instanceof StackPane sp2) {
+                sp2.getChildren().remove(overlay);
+            } else if (root instanceof Pane p2) {
+                p2.getChildren().remove(overlay);
+            }
+        });
+        fadeOut.play();
+    });
+    pause.play();
+}
+
 
     private class IdeaListCell extends ListCell<IdeaDto> {
         private final HBox rowContainer = new HBox(12);
@@ -284,8 +350,12 @@ public class ReviewIdeasController {
             } else {
                 titleLabel.setText(idea.getTitle());
                 categoryLabel.setText(idea.getCategory());
+
                 String desc = idea.getDescription();
-                if (desc.length() > 100) desc = desc.substring(0, 100) + "...";
+                if (desc != null && desc.length() > 100) {
+                    desc = desc.substring(0, 100) + "...";
+                }
+
                 snippetLabel.setText(desc);
 
                 statusBadge.getStyleClass().removeIf(s -> s.startsWith("badge-"));
@@ -309,6 +379,7 @@ public class ReviewIdeasController {
                         statusBadge.getStyleClass().add("badge-rejected");
                     }
                 }
+
                 setGraphic(rowContainer);
             }
         }

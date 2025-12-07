@@ -25,15 +25,12 @@ public class Workspace extends Application {
 
     public Workspace() {
         instance = this;
-
-        // Register navigators so SprintManagementView can route here
         SprintNavigator.register(this);
         WorkspaceNavigator.register(this);
     }
 
     private ComboBox<ProjectItem> projectSelector;
     private BorderPane root;
-
     private String currentViewName = "dashboard";
     private Pane currentViewPane;
 
@@ -63,7 +60,6 @@ public class Workspace extends Application {
         loadProjectsIntoDropdown();
     }
 
-    // Called when user clicks a sprint in SprintManagementView
     public void switchToSprintBoard(long sprintId) {
         SprintBoardView view = new SprintBoardView(sprintId);
         switchView(view.getView(), "sprint");
@@ -85,14 +81,8 @@ public class Workspace extends Application {
         Button settingsBtn = new Button("Team Settings");
 
         sidebar.getChildren().addAll(
-                projectsBtn,
-                dashboardBtn,
-                ideationBtn,
-                backlogBtn,
-                sprintBtn,
-                sprintMgmtBtn,
-                reportsBtn,
-                settingsBtn
+                projectsBtn, dashboardBtn, ideationBtn, backlogBtn,
+                sprintBtn, sprintMgmtBtn, reportsBtn, settingsBtn
         );
 
         projectsBtn.setOnAction(e -> switchView(new ProjectsView().getView(), "projects"));
@@ -100,26 +90,47 @@ public class Workspace extends Application {
 
         ideationBtn.setOnAction(e -> {
             try {
+                ProjectItem selected = projectSelector.getValue();
+                if (selected == null) {
+                    showProjectNeeded();
+                    return;
+                }
+
+                ProjectSession.setProjectId(selected.id());
+                refreshCurrentView();
+
+
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/com/example/ideaboard/views/review_ideas.fxml")
                 );
                 switchView(loader.load(), "ideation");
-            } catch (Exception ex) { ex.printStackTrace(); }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         backlogBtn.setOnAction(e -> {
-            if (!ProjectSession.hasProjectSelected()) { showProjectNeeded(); return; }
+            if (!ProjectSession.hasProjectSelected()) {
+                showProjectNeeded();
+                return;
+            }
             switchView(new BacklogView().getView(), "backlog");
         });
 
         sprintBtn.setOnAction(e -> {
-            if (!ProjectSession.hasProjectSelected()) { showProjectNeeded(); return; }
+            if (!ProjectSession.hasProjectSelected()) {
+                showProjectNeeded();
+                return;
+            }
             switchView(new SprintBoardView().getView(), "sprint");
         });
 
-        // FIXED: correct class name
         sprintMgmtBtn.setOnAction(e -> {
-            if (!ProjectSession.hasProjectSelected()) { showProjectNeeded(); return; }
+            if (!ProjectSession.hasProjectSelected()) {
+                showProjectNeeded();
+                return;
+            }
             switchView(new SprintManagementView().getView(), "sprintMgmt");
         });
 
@@ -147,6 +158,8 @@ public class Workspace extends Application {
             if (selected == null) return;
 
             ProjectSession.setProjectId(selected.id());
+            System.out.println("Selected projectId = " + ProjectSession.getProjectId());
+
             refreshCurrentView();
         });
 
@@ -155,9 +168,18 @@ public class Workspace extends Application {
 
         Button createBtn = new Button("+ Create Idea");
         createBtn.getStyleClass().add("create-btn");
+
         createBtn.setOnAction(e -> {
-            try { DialogHelper.openCreateIdeaDialog(); }
-            catch (Exception ex) { ex.printStackTrace(); }
+            if (!ProjectSession.hasProjectSelected()) {
+                showProjectNeeded();
+                return;
+            }
+
+            try {
+                DialogHelper.openCreateIdeaDialog();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         topBar.getChildren().addAll(headerTitle, projectSelector, spacer, createBtn);
@@ -172,12 +194,24 @@ public class Workspace extends Application {
 
     private void refreshCurrentView() {
         switch (currentViewName) {
-            case "dashboard"   -> switchView(new DashboardView().getView(), "dashboard");
-            case "backlog"     -> switchView(new BacklogView().getView(), "backlog");
-            case "sprint"      -> switchView(new SprintBoardView().getView(), "sprint");
-            case "sprintMgmt"  -> switchView(new SprintManagementView().getView(), "sprintMgmt");
-            case "reports"     -> switchView(new ReportsView().getView(), "reports");
-            case "projects"    -> switchView(new ProjectsView().getView(), "projects");
+            case "dashboard" -> switchView(new DashboardView().getView(), "dashboard");
+            case "backlog" -> switchView(new BacklogView().getView(), "backlog");
+            case "sprint" -> switchView(new SprintBoardView().getView(), "sprint");
+            case "sprintMgmt" -> switchView(new SprintManagementView().getView(), "sprintMgmt");
+            case "reports" -> switchView(new ReportsView().getView(), "reports");
+            case "projects" -> switchView(new ProjectsView().getView(), "projects");
+            case "ideation" -> {
+    try {
+        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/com/example/ideaboard/views/review_ideas.fxml")
+        );
+        Pane newView = loader.load();
+        switchView(newView, "ideation");
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
         }
     }
 
@@ -201,50 +235,47 @@ public class Workspace extends Application {
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject o = arr.getJSONObject(i);
                         ProjectItem item = new ProjectItem(o.getLong("id"), o.getString("name"));
-
                         projectSelector.getItems().add(item);
 
                         if (ProjectSession.getProjectId() == item.id()) {
                             projectSelector.setValue(item);
+                            ProjectSession.setProjectId(item.id());
                         }
                     }
                 });
 
-            } catch (Exception ex) { ex.printStackTrace(); }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }).start();
     }
 
-    // -----------------------------------------------------
-// STATIC HELPERS USED BY ProjectsView and WorkspaceNavigator
-// -----------------------------------------------------
+    public static void refreshProjectsDropdown() {
+        if (instance != null) {
+            instance.loadProjectsIntoDropdown();
 
-public static void refreshProjectsDropdown() {
-    if (instance != null) {
-        instance.loadProjectsIntoDropdown();
-
-        if (instance.currentViewName.equals("projects")) {
-            Platform.runLater(() ->
-                    instance.switchView(new ProjectsView().getView(), "projects")
-            );
+            if (instance.currentViewName.equals("projects")) {
+                Platform.runLater(() ->
+                        instance.switchView(new ProjectsView().getView(), "projects")
+                );
+            }
         }
     }
-}
 
-public static void setProjectAndGoToDashboard(long projectId) {
-    if (instance == null) return;
+    public static void setProjectAndGoToDashboard(long projectId) {
+        if (instance == null) return;
 
-    ProjectSession.setProjectId(projectId);
+        ProjectSession.setProjectId(projectId);
 
-    Platform.runLater(() -> {
-        instance.projectSelector.getItems().forEach(item -> {
-            if (item.id() == projectId)
-                instance.projectSelector.setValue(item);
+        Platform.runLater(() -> {
+            instance.projectSelector.getItems().forEach(item -> {
+                if (item.id() == projectId)
+                    instance.projectSelector.setValue(item);
+            });
+
+            instance.switchView(new DashboardView().getView(), "dashboard");
         });
-
-        instance.switchView(new DashboardView().getView(), "dashboard");
-    });
-}
-
+    }
 
     private void showProjectNeeded() {
         Alert a = new Alert(Alert.AlertType.WARNING);
@@ -254,8 +285,13 @@ public static void setProjectAndGoToDashboard(long projectId) {
     }
 
     private record ProjectItem(long id, String name) {
-        @Override public String toString() { return name; }
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
-    public static void main(String[] args) { launch(); }
+    public static void main(String[] args) {
+        launch();
+    }
 }
