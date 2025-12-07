@@ -60,7 +60,24 @@ public class DashboardView {
                 createInfoCard("Sprint Ready", sprintReady, "Ready for development", "card-yellow"),
                 createInfoCard("Team Velocity", teamVelocity, "Points per sprint", "card-green")
         );
-        pane.setTop(summaryBox);
+        // Add header with summary on the left and a "New Release" button on the right
+        HBox header = new HBox();
+        header.setPadding(new Insets(0,0,12,0));
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button newReleaseBtn = new Button("+ New Release");
+        newReleaseBtn.getStyleClass().add("primary-button");
+        newReleaseBtn.setOnAction(e -> {
+            try {
+                // Open the create-release dialog from UC14
+                com.example.agile_re_tool.UC14ReleasePlan dlg = new com.example.agile_re_tool.UC14ReleasePlan();
+                dlg.openCreateDialogStandalone();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+        header.getChildren().addAll(summaryBox, spacer, newReleaseBtn);
+        pane.setTop(header);
 
         HBox centerBox = new HBox(30);
         centerBox.setPadding(new Insets(20, 0, 0, 0));
