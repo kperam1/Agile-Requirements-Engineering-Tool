@@ -90,11 +90,18 @@ public class SprintBoardView {
         assigneeDropdown.getItems().add("All Assignees");
         assigneeDropdown.setOnAction(e -> applyFilter());
 
+        Button refreshBtn = new Button("🔄 Refresh");
+        refreshBtn.setStyle("-fx-background-color:#10b981; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600; -fx-cursor:hand;");
+        refreshBtn.setOnAction(e -> {
+            loadStories();
+            loadAssignees();
+        });
+        
         Button exportBtn = new Button("Export");
         exportBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
         Button addStoryBtn = new Button("+ Add Story");
         addStoryBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
-        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), exportBtn, addStoryBtn);
+        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), refreshBtn, exportBtn, addStoryBtn);
         HBox.setHgrow(filterBar.getChildren().get(1), Priority.ALWAYS);
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.setPadding(new Insets(0,0,12,0));
