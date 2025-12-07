@@ -91,6 +91,13 @@ public class Workspace extends Application {
             root.setCenter(currentView[0]);
         });
 
+        settingsBtn.setOnAction(e -> {
+        TeamSettingsView teamSettingsView = new TeamSettingsView();
+       currentView[0] = teamSettingsView.getView();
+        root.setCenter(currentView[0]);
+});
+
+
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(
                 getClass().getResource("/styles/workspace.css").toExternalForm()
