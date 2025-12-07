@@ -1,5 +1,3 @@
-Project Setup
-
 ## Requirements
 
 Before running this project, ensure you have the following installed:
@@ -103,3 +101,4 @@ mvn javafx:run
 **Expected output:** JavaFX application window will launch
 
 ---
+
