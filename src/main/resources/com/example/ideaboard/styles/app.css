@@ -347,21 +347,3 @@ VBox {
 .btn-approve:hover {
     -fx-background-color: #1D4ED8;
 }
-
-.list-cell {
-    -fx-padding: 12;
-}
-
-.button {
-    -fx-background-radius: 6;
-    -fx-padding: 6 14;
-}
-
-.button:hover {
-    -fx-background-color: #e2e2e2;
-}
-
-.label {
-    -fx-font-family: "Segoe UI";
-}
-

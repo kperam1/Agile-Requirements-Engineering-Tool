@@ -1,7 +1,5 @@
 package com.example.ideaboard.auth.model;
 
-import com.example.ideaboard.model.Project;
-import com.example.ideaboard.model.Sprint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -31,14 +29,6 @@ public class UserStory {
 
     @Column(name = "sprint_ready")
     private Boolean sprintReady;
-
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
-
-    @ManyToOne
-    @JoinColumn(name = "sprint_id")
-    private Sprint sprint;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -132,22 +122,6 @@ public class UserStory {
 
     public void setSprintReady(Boolean sprintReady) {
         this.sprintReady = sprintReady;
-    }
-
-    public Project getProject() {
-        return project;
-    }
-
-    public void setProject(Project project) {
-        this.project = project;
-    }
-
-    public Sprint getSprint() {
-        return sprint;
-    }
-
-    public void setSprint(Sprint sprint) {
-        this.sprint = sprint;
     }
 
     public LocalDateTime getCreatedAt() {
