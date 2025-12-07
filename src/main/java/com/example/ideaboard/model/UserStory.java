@@ -1,58 +1,24 @@
-package com.example.ideaboard.auth.model;
+package com.example.agile_re_tool.model;
 
-import com.example.ideaboard.model.Project;
-import com.example.ideaboard.model.Sprint;
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
-@Entity
-@Table(name = "user_stories")
 public class UserStory {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
-
-    @Column(length = 2000)
     private String description;
-
-    @Column(length = 2000)
     private String acceptanceCriteria;
-
     private String assignedTo;
-
     private String priority;
     private String status;
     private Integer storyPoints;
-
     private Boolean mvp;
-
-    @Column(name = "sprint_ready")
     private Boolean sprintReady;
 
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+    private long projectId;
+    private Long sprintId;
 
-    @ManyToOne
-    @JoinColumn(name = "sprint_id")
-    private Sprint sprint;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private String createdAt;
+    private String updatedAt;
 
     public Long getId() {
         return id;
@@ -134,35 +100,35 @@ public class UserStory {
         this.sprintReady = sprintReady;
     }
 
-    public Project getProject() {
-        return project;
+    public long getProjectId() {
+        return projectId;
     }
 
-    public void setProject(Project project) {
-        this.project = project;
+    public void setProjectId(long projectId) {
+        this.projectId = projectId;
     }
 
-    public Sprint getSprint() {
-        return sprint;
+    public Long getSprintId() {
+        return sprintId;
     }
 
-    public void setSprint(Sprint sprint) {
-        this.sprint = sprint;
+    public void setSprintId(Long sprintId) {
+        this.sprintId = sprintId;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
 }
