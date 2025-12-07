@@ -4,7 +4,9 @@ import com.example.agile_re_tool.UC04EditUserStory;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -13,14 +15,24 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.FileWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
+
+import java.io.File;
+import java.io.FileWriter;
+import javafx.stage.FileChooser;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Alert;
+
 
 public class SprintBoardView {
 
@@ -47,18 +59,17 @@ public class SprintBoardView {
         summaryCards.setPrefWidth(1); // allow to grow
         summaryCards.setMaxWidth(Double.MAX_VALUE);
 
-        // Small horizontal summary cards
-        // Use visible icons and single label per card
-        HBox totalCard = smallSummaryCard("📦", "Total Stories", "0", "#2563eb", "#e0e7ff");
+        // summary cards
+        HBox totalCard = smallSummaryCard("#", "Total Stories", "0", "#2563eb", "#e0e7ff");
         totalStories = (Label) totalCard.lookup("#summary-value");
 
-        HBox completedCard = smallSummaryCard("✔", "Completed", "0", "#10b981", "#e0f7e9");
+        HBox completedCard = smallSummaryCard("✓", "Completed", "0", "#10b981", "#e0f7e9");
         completed = (Label) completedCard.lookup("#summary-value");
 
-        HBox inProgressCard = smallSummaryCard("⏳", "In Progress", "0", "#f59e0b", "#fff7e0");
+        HBox inProgressCard = smallSummaryCard("○", "In Progress", "0", "#f59e0b", "#fff7e0");
         inProgress = (Label) inProgressCard.lookup("#summary-value");
 
-        HBox pointsCard = smallSummaryCard("🏆", "Story Points", "0/0", "#6366f1", "#ececff");
+        HBox pointsCard = smallSummaryCard("★", "Story Points", "0/0", "#6366f1", "#ececff");
         storyPoints = (Label) pointsCard.lookup("#summary-value");
 
         summaryCards.getChildren().setAll(totalCard, completedCard, inProgressCard, pointsCard);
@@ -72,12 +83,12 @@ public class SprintBoardView {
         }
 
         // Sprint Progress bar
-        sprintProgress = new ProgressBar(0.3);
+        sprintProgress = new ProgressBar(0);
         sprintProgress.setPrefWidth(400);
         sprintProgress.setStyle("-fx-accent:#2563eb; -fx-background-radius:8;");
         Label progressLabel = new Label("Sprint Progress");
         progressLabel.setStyle("-fx-font-size:13px; -fx-text-fill:#2563eb; -fx-font-weight:600;");
-        progressPercent = new Label("30%");
+        progressPercent = new Label("0%");
         progressPercent.setStyle("-fx-font-size:13px; -fx-text-fill:#2563eb; -fx-font-weight:600;");
         HBox progressBox = new HBox(12, progressLabel, sprintProgress, progressPercent);
         progressBox.setAlignment(Pos.CENTER_LEFT);
@@ -90,11 +101,18 @@ public class SprintBoardView {
         assigneeDropdown.getItems().add("All Assignees");
         assigneeDropdown.setOnAction(e -> applyFilter());
 
+        Button refreshBtn = new Button("↻ Refresh");
+        refreshBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600; -fx-cursor:hand;");
+        refreshBtn.setOnAction(e -> {
+            loadStories();
+            loadAssignees();
+        });
+        
         Button exportBtn = new Button("Export");
         exportBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
         Button addStoryBtn = new Button("+ Add Story");
         addStoryBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
-        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), exportBtn, addStoryBtn);
+        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), refreshBtn, exportBtn, addStoryBtn);
         HBox.setHgrow(filterBar.getChildren().get(1), Priority.ALWAYS);
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.setPadding(new Insets(0,0,12,0));
@@ -150,6 +168,15 @@ public class SprintBoardView {
 
     // Handle story drop 
     private void handleStoryDrop(long storyId, String newStatus) {
+        // Update the status in allStories JSONArray
+        for (int i = 0; i < allStories.length(); i++) {
+            JSONObject story = allStories.getJSONObject(i);
+            if (story.getLong("id") == storyId) {
+                story.put("status", newStatus);
+                break;
+            }
+        }
+        
         // Find the card node for the storyId
         VBox[] columns = {todoColumn, inProgressColumn, testingColumn, doneColumn};
         VBox targetColumn = null;
@@ -171,6 +198,10 @@ public class SprintBoardView {
                 }
             }
         }
+        
+        // Recalculate summary and update UI
+        recalculateSummary();
+        
         // Send backend update (async)
         Platform.runLater(() -> {
             try {
@@ -189,6 +220,35 @@ public class SprintBoardView {
                 e.printStackTrace();
             }
         });
+    }
+    
+    // Recalculate summary cards and progress based on current column contents
+    private void recalculateSummary() {
+        int todoCount = todoColumn.getChildren().size() - 1; // -1 for header
+        int inProgressCount = inProgressColumn.getChildren().size() - 1;
+        int testingCount = testingColumn.getChildren().size() - 1;
+        int doneCount = doneColumn.getChildren().size() - 1;
+        
+        int totalStoriesCount = todoCount + inProgressCount + testingCount + doneCount;
+        int totalPoints = 0;
+        int completedPoints = 0;
+        
+        // Calculate story points from allStories
+        for (int i = 0; i < allStories.length(); i++) {
+            JSONObject story = allStories.getJSONObject(i);
+            int points = story.optInt("storyPoints", 0);
+            totalPoints += points;
+            if (story.optString("status", "").equals("Done")) {
+                completedPoints += points;
+            }
+        }
+        
+        updateCount(todoColumn, "to-do-count", todoCount);
+        updateCount(inProgressColumn, "in-progress-count", inProgressCount);
+        updateCount(testingColumn, "testing-count", testingCount);
+        updateCount(doneColumn, "done-count", doneCount);
+        updateSummaryCards(totalStoriesCount, doneCount, inProgressCount, completedPoints, totalPoints);
+        updateProgressBar(totalPoints == 0 ? 0 : (double)completedPoints / totalPoints);
     }
     
     // Small horizontal summary card
