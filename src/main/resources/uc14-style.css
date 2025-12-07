@@ -1,0 +1,63 @@
+/* Styles for UC14 Release Plan modal and buttons */
+.primary-button {
+    -fx-background-color: #2563eb; /* bright blue */
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+.primary-button:hover { -fx-opacity: 0.95; }
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 8;
+    -fx-text-fill: #374151;
+    -fx-padding: 6 12 6 12;
+}
+
+.modal-root {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(two-pass-box, rgba(2,6,23,0.12), 12, 0, 0, 4);
+}
+
+.modal-close {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.status-pill {
+    -fx-background-color: #eef2ff;
+    -fx-text-fill: #1e3a8a;
+    -fx-padding: 3 8;
+    -fx-background-radius: 12;
+    -fx-font-size: 11px;
+}
+
+.avatar-circle {
+    -fx-background-color: #eef2ff;
+    -fx-text-fill: #1e3a8a;
+    -fx-min-width: 28px;
+    -fx-min-height: 28px;
+    -fx-alignment: center;
+    -fx-background-radius: 50%;
+    -fx-font-weight: 600;
+    -fx-padding: 4;
+}
+
+.list-sheet {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+/* make the header+new release button align nicely */
+.release-root .primary-button {
+    -fx-min-width: 120px;
+}
