@@ -41,59 +41,66 @@ public class SprintBoardView {
         root.setStyle("-fx-background-color:#ffffff;");
 
         // Top summary cards (pixel-perfect)
-        HBox summaryCards = new HBox(32);
+        HBox summaryCards = new HBox(24);
         summaryCards.setAlignment(Pos.CENTER);
-        summaryCards.setPadding(new Insets(0,0,18,0));
+        summaryCards.setPadding(new Insets(0,0,24,0));
         summaryCards.setPrefWidth(1); // allow to grow
         summaryCards.setMaxWidth(Double.MAX_VALUE);
 
-        // Card 1: Total Stories
-        VBox totalCard = buildSummaryCard(
-            "Total Stories", "0", "#2563eb", "#e0e7ff"
-        );
+        // summary cards
+        HBox totalCard = smallSummaryCard("#", "Total Stories", "0", "#2563eb", "#e0e7ff");
         totalStories = (Label) totalCard.lookup("#summary-value");
 
-        VBox completedCard = buildSummaryCard(
-            "Completed", "0", "#10b981", "#d1fae5"
-        );
+        HBox completedCard = smallSummaryCard("✓", "Completed", "0", "#10b981", "#e0f7e9");
         completed = (Label) completedCard.lookup("#summary-value");
 
-        VBox inProgressCard = buildSummaryCard(
-            "In Progress", "0", "#f59e0b", "#fef3c7"
-        );
+        HBox inProgressCard = smallSummaryCard("○", "In Progress", "0", "#f59e0b", "#fff7e0");
         inProgress = (Label) inProgressCard.lookup("#summary-value");
 
-        VBox pointsCard = buildSummaryCard(
-            "Story Points", "0/0", "#6366f1", "#e0e7ff"
-        );
+        HBox pointsCard = smallSummaryCard("★", "Story Points", "0/0", "#6366f1", "#ececff");
         storyPoints = (Label) pointsCard.lookup("#summary-value");
 
-        summaryCards.getChildren().addAll(totalCard, completedCard, inProgressCard, pointsCard);
+        summaryCards.getChildren().setAll(totalCard, completedCard, inProgressCard, pointsCard);
+        summaryCards.setSpacing(16);
+        summaryCards.setAlignment(Pos.CENTER_LEFT);
+        summaryCards.setStyle("-fx-background-color:transparent;");
+        summaryCards.setPrefHeight(40);
+        summaryCards.setMaxWidth(Double.MAX_VALUE);
+        for (javafx.scene.Node card : summaryCards.getChildren()) {
+            HBox.setHgrow(card, Priority.ALWAYS);
+        }
 
         // Sprint Progress bar
-        sprintProgress = new ProgressBar(0.3);
+        sprintProgress = new ProgressBar(0);
         sprintProgress.setPrefWidth(400);
         sprintProgress.setStyle("-fx-accent:#2563eb; -fx-background-radius:8;");
         Label progressLabel = new Label("Sprint Progress");
         progressLabel.setStyle("-fx-font-size:13px; -fx-text-fill:#2563eb; -fx-font-weight:600;");
-        progressPercent = new Label("30%");
+        progressPercent = new Label("0%");
         progressPercent.setStyle("-fx-font-size:13px; -fx-text-fill:#2563eb; -fx-font-weight:600;");
         HBox progressBox = new HBox(12, progressLabel, sprintProgress, progressPercent);
         progressBox.setAlignment(Pos.CENTER_LEFT);
         progressBox.setPadding(new Insets(0,0,18,0));
 
-        // Only Assignee Dropdown
+        // Assignee Dropdown
         assigneeDropdown = new ComboBox<>();
         assigneeDropdown.setPrefWidth(180);
         assigneeDropdown.setValue("All Assignees");
         assigneeDropdown.getItems().add("All Assignees");
         assigneeDropdown.setOnAction(e -> applyFilter());
 
+        Button refreshBtn = new Button("↻ Refresh");
+        refreshBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600; -fx-cursor:hand;");
+        refreshBtn.setOnAction(e -> {
+            loadStories();
+            loadAssignees();
+        });
+        
         Button exportBtn = new Button("Export");
         exportBtn.setStyle("-fx-background-color:#e0e7ff; -fx-text-fill:#2563eb; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
         Button addStoryBtn = new Button("+ Add Story");
         addStoryBtn.setStyle("-fx-background-color:#2563eb; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:6 14; -fx-font-weight:600;");
-        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), exportBtn, addStoryBtn);
+        HBox filterBar = new HBox(12, assigneeDropdown, new Region(), refreshBtn, exportBtn, addStoryBtn);
         HBox.setHgrow(filterBar.getChildren().get(1), Priority.ALWAYS);
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.setPadding(new Insets(0,0,12,0));
@@ -101,47 +108,158 @@ public class SprintBoardView {
         VBox topSection = new VBox(10, summaryCards, filterBar, progressBox);
 
         // Columns: TO DO, IN PROGRESS, TESTING, DONE
-        HBox columns = new HBox(16,
-            wrapScrollable(todoColumn),
-            wrapScrollable(inProgressColumn),
-            wrapScrollable(testingColumn),
-            wrapScrollable(doneColumn));
+        ScrollPane todoScroll = wrapScrollable(todoColumn);
+        ScrollPane inProgressScroll = wrapScrollable(inProgressColumn);
+        ScrollPane testingScroll = wrapScrollable(testingColumn);
+        ScrollPane doneScroll = wrapScrollable(doneColumn);
+
+        enableScrollDrop(todoScroll, "To Do");
+        enableScrollDrop(inProgressScroll, "In Progress");
+        enableScrollDrop(testingScroll, "Testing");
+        enableScrollDrop(doneScroll, "Done");
+
+        HBox columns = new HBox(16, todoScroll, inProgressScroll, testingScroll, doneScroll);
         columns.setPrefHeight(600);
         columns.setAlignment(Pos.TOP_LEFT);
-
         root.setTop(topSection);
         root.setCenter(columns);
-
         loadStories();
         loadAssignees();
         return root;
     }
+
+    // Enable drop for a column
+    private void enableScrollDrop(ScrollPane scroll, String newStatus) {
+        scroll.setOnDragOver(event -> {
+            if (event.getDragboard().hasString()) {
+                event.acceptTransferModes(javafx.scene.input.TransferMode.MOVE);
+                scroll.setStyle(scroll.getStyle() + "; -fx-background-color:#e0f7fa;"); // highlight
+            }
+            event.consume();
+        });
+        scroll.setOnDragExited(event -> {
+            scroll.setStyle(scroll.getStyle().replace("; -fx-background-color:#e0f7fa;", ""));
+            event.consume();
+        });
+        scroll.setOnDragDropped(event -> {
+            javafx.scene.input.Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                long storyId = Long.parseLong(db.getString());
+                handleStoryDrop(storyId, newStatus);
+                success = true;
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    // Handle story drop 
+    private void handleStoryDrop(long storyId, String newStatus) {
+        // Update the status in allStories JSONArray
+        for (int i = 0; i < allStories.length(); i++) {
+            JSONObject story = allStories.getJSONObject(i);
+            if (story.getLong("id") == storyId) {
+                story.put("status", newStatus);
+                break;
+            }
+        }
+        
+        // Find the card node for the storyId
+        VBox[] columns = {todoColumn, inProgressColumn, testingColumn, doneColumn};
+        VBox targetColumn = null;
+        switch (newStatus) {
+            case "To Do": targetColumn = todoColumn; break;
+            case "In Progress": targetColumn = inProgressColumn; break;
+            case "Testing": targetColumn = testingColumn; break;
+            case "Done": targetColumn = doneColumn; break;
+        }
+        for (VBox col : columns) {
+            for (Iterator<javafx.scene.Node> it = col.getChildren().iterator(); it.hasNext(); ) {
+                javafx.scene.Node node = it.next();
+                if (node.getUserData() != null && node.getUserData().equals(storyId)) {
+                    it.remove();
+                    if (targetColumn != null) {
+                        targetColumn.getChildren().add(node);
+                    }
+                    break;
+                }
+            }
+        }
+        
+        // Recalculate summary and update UI
+        recalculateSummary();
+        
+        // Send backend update (async)
+        Platform.runLater(() -> {
+            try {
+                HttpClient client = HttpClient.newHttpClient();
+                JSONObject payload = new JSONObject();
+                payload.put("id", storyId);
+                payload.put("status", newStatus);
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:8080/api/userstories/" + storyId + "/status"))
+                        .header("Content-Type", "application/json")
+                        .PUT(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                        .build();
+                client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .thenAccept(response -> System.out.println("Status update: " + response.body()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
     
-    // ...existing code...
+    // Recalculate summary cards and progress based on current column contents
+    private void recalculateSummary() {
+        int todoCount = todoColumn.getChildren().size() - 1; // -1 for header
+        int inProgressCount = inProgressColumn.getChildren().size() - 1;
+        int testingCount = testingColumn.getChildren().size() - 1;
+        int doneCount = doneColumn.getChildren().size() - 1;
+        
+        int totalStoriesCount = todoCount + inProgressCount + testingCount + doneCount;
+        int totalPoints = 0;
+        int completedPoints = 0;
+        
+        // Calculate story points from allStories
+        for (int i = 0; i < allStories.length(); i++) {
+            JSONObject story = allStories.getJSONObject(i);
+            int points = story.optInt("storyPoints", 0);
+            totalPoints += points;
+            if (story.optString("status", "").equals("Done")) {
+                completedPoints += points;
+            }
+        }
+        
+        updateCount(todoColumn, "to-do-count", todoCount);
+        updateCount(inProgressColumn, "in-progress-count", inProgressCount);
+        updateCount(testingColumn, "testing-count", testingCount);
+        updateCount(doneColumn, "done-count", doneCount);
+        updateSummaryCards(totalStoriesCount, doneCount, inProgressCount, completedPoints, totalPoints);
+        updateProgressBar(totalPoints == 0 ? 0 : (double)completedPoints / totalPoints);
+    }
+    
+    // Small horizontal summary card
+    private HBox smallSummaryCard(String iconUnicode, String label, String value, String color, String bgColor) {
+        Label iconLbl = new Label(iconUnicode);
+        iconLbl.setStyle("-fx-font-size:18px; -fx-text-fill:" + color + "; -fx-font-weight:700; -fx-padding:0 8 0 0;");
 
-    // New: Build summary card with icon and custom style
-    private VBox buildSummaryCard(String label, String value, String color, String bgColor) {
-        Label labelLbl = new Label(label);
-        labelLbl.setStyle("-fx-font-size:13px; -fx-font-weight:normal; -fx-text-fill:#374151; -fx-padding:0 0 0 0;");
+        Label labelAndValue = new Label(label + ": " + value);
+        labelAndValue.setId("summary-value");
+        labelAndValue.setStyle("-fx-font-size:16px; -fx-font-weight:600; -fx-text-fill:" + color + ";");
 
-        Label valueLbl = new Label(value);
-        valueLbl.setId("summary-value");
-        valueLbl.setStyle("-fx-font-size:38px; -fx-font-weight:normal; -fx-text-fill:" + color + ";");
-
-        VBox card = new VBox(4, labelLbl, valueLbl);
-        card.setAlignment(Pos.TOP_LEFT);
-        card.setPadding(new Insets(18, 24, 18, 24));
+        HBox card = new HBox(8, iconLbl, labelAndValue);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(8, 16, 8, 16));
         card.setStyle(
             "-fx-background-color:" + bgColor + "; " +
-            "-fx-background-radius:16; " +
-            "-fx-border-color:" + color + "; " +
-            "-fx-border-radius:16; " +
-            "-fx-border-width:2; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
+            "-fx-background-radius:12; " +
+            "-fx-border-color:transparent; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 1);"
         );
-        card.setMinWidth(180);
+        card.setMinHeight(32);
+        card.setMaxHeight(40);
         card.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(card, Priority.ALWAYS);
         return card;
     }
 
@@ -188,6 +306,7 @@ public class SprintBoardView {
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> {
                         allStories = new JSONArray(response.body());
+                        loadAssignees();
                         applyFilter();
                     });
                 } else {
@@ -199,29 +318,20 @@ public class SprintBoardView {
         }).start();
     }
 
-    // Fetch assignees from backend
+    // Populate assignees from loaded user stories
     private void loadAssignees() {
-        new Thread(() -> {
-            try {
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest req = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/userstories/assignees"))
-                        .GET().build();
-                HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 200) {
-                    Platform.runLater(() -> {
-                        JSONArray arr = new JSONArray(response.body());
-                        assigneeDropdown.getItems().clear();
-                        assigneeDropdown.getItems().add("All Assignees");
-                        for (int i = 0; i < arr.length(); i++) {
-                            String name = arr.getString(i);
-                            assigneeDropdown.getItems().add(name);
-                        }
-                        assigneeDropdown.setValue("All Assignees");
-                    });
-                }
-            } catch (Exception ignored) {}
-        }).start();
+        Platform.runLater(() -> {
+            Set<String> assignees = new LinkedHashSet<>();
+            assignees.add("All Assignees");
+            for (int i = 0; i < allStories.length(); i++) {
+                JSONObject o = allStories.getJSONObject(i);
+                String assignee = o.optString("assignedTo", "").trim();
+                if (!assignee.isEmpty()) assignees.add(assignee);
+            }
+            assigneeDropdown.getItems().clear();
+            assigneeDropdown.getItems().addAll(assignees);
+            assigneeDropdown.setValue("All Assignees");
+        });
     }
     
     private void applyFilter() {
@@ -286,10 +396,10 @@ public class SprintBoardView {
     }
 
     private void updateSummaryCards(int total, int completedVal, int inProgressVal, int completedPoints, int totalPoints) {
-        if (totalStories != null) totalStories.setText("Total Stories\n" + total);
-        if (completed != null) completed.setText("Completed\n" + completedVal);
-        if (inProgress != null) inProgress.setText("In Progress\n" + inProgressVal);
-        if (storyPoints != null) storyPoints.setText("Story Points\n" + completedPoints + "/" + totalPoints);
+        if (totalStories != null) totalStories.setText("Total Stories: " + total);
+        if (completed != null) completed.setText("Completed: " + completedVal);
+        if (inProgress != null) inProgress.setText("In Progress: " + inProgressVal);
+        if (storyPoints != null) storyPoints.setText("Story Points: " + completedPoints + "/" + totalPoints);
     }
 
     private void updateProgressBar(double percent) {
@@ -390,28 +500,42 @@ public class SprintBoardView {
         HBox.setHgrow(footer.getChildren().get(1), Priority.ALWAYS);
 
         // Card container
-        VBox card = new VBox(8, topRow, header, descLbl, footer, editBtn);
-        card.setPadding(new Insets(14));
+        VBox card = new VBox(10, topRow, header, descLbl, footer, editBtn);
+        card.setPadding(new Insets(18));
         card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-background-color:#fff; -fx-background-radius:16; " +
+            "-fx-border-color:#e0e7ff; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         );
+        card.setUserData(id);
 
         // Hover effect
         card.setOnMouseEntered(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#3b82f6; -fx-border-radius:12; -fx-border-width:2; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3); " +
+            "-fx-background-color:#f3f4f6; -fx-background-radius:16; " +
+            "-fx-border-color:#2563eb; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(37,99,235,0.10), 12, 0, 0, 4); " +
             "-fx-cursor:hand;"
         ));
         card.setOnMouseExited(e -> card.setStyle(
-            "-fx-background-color:#ffffff; -fx-background-radius:12; " +
-            "-fx-border-color:#e5e7eb; -fx-border-radius:12; -fx-border-width:1; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); " +
+            "-fx-background-color:#fff; -fx-background-radius:16; " +
+            "-fx-border-color:#e0e7ff; -fx-border-radius:16; -fx-border-width:2; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0, 0, 3); " +
             "-fx-cursor:hand;"
         ));
+
+            // Enable drag for story card
+            card.setOnDragDetected(event -> {
+                javafx.scene.input.Dragboard db = card.startDragAndDrop(javafx.scene.input.TransferMode.MOVE);
+                javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+                content.putString(Long.toString(id));
+                db.setContent(content);
+                event.consume();
+            });
+
+            card.setOnDragDone(event -> {
+                event.consume();
+            });
 
         return card;
     }
