@@ -14,7 +14,6 @@ import java.util.List;
 
 public class IdeaApiClient {
 
-    // Adjust if your backend runs on another port
     private static final String BASE_URL = "http://localhost:8080/api/ideas";
 
     private final HttpClient httpClient;
@@ -29,7 +28,34 @@ public class IdeaApiClient {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
-    // GET /api/ideas
+    // -------------------------------------------------------------------------
+    // GET /api/projects/{projectId}/ideas
+    // -------------------------------------------------------------------------
+    public List<IdeaDto> listByProject(long projectId) throws Exception {
+
+        String url = "http://localhost:8080/api/projects/" + projectId + "/ideas";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to fetch ideas for project " + projectId
+                    + ". Status: " + response.statusCode());
+        }
+
+        return objectMapper.readValue(
+                response.body(),
+                new TypeReference<List<IdeaDto>>() {}
+        );
+    }
+
+    // GET all ideas (not filtered)
     public List<IdeaDto> list() throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL))
@@ -65,6 +91,31 @@ public class IdeaApiClient {
 
         if (response.statusCode() != 200) {
             throw new RuntimeException("Failed to fetch idea. Status: " + response.statusCode());
+        }
+
+        return objectMapper.readValue(response.body(), IdeaDto.class);
+    }
+
+    // POST /api/projects/{projectId}/ideas
+    public IdeaDto create(long projectId, IdeaDto idea) throws Exception {
+
+        String url = "http://localhost:8080/api/projects/" + projectId + "/ideas";
+
+        String json = objectMapper.writeValueAsString(idea);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200 && response.statusCode() != 201) {
+            throw new RuntimeException(
+                    "Failed to create idea. Server returned: " + response.statusCode()
+            );
         }
 
         return objectMapper.readValue(response.body(), IdeaDto.class);

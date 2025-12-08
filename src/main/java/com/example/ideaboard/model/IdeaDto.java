@@ -1,7 +1,8 @@
 package com.example.ideaboard.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
 
 public class IdeaDto {
@@ -16,13 +17,33 @@ public class IdeaDto {
     @JsonAlias("ownerName")
     private String primaryActor;
 
-    @JsonProperty("createdAt")
     private LocalDateTime createdAt;
-
-    @JsonProperty("updatedAt")
     private LocalDateTime updatedAt;
 
+    // ⭐ NEW: store project ID inside DTO
+    private Long projectId;
+
     public IdeaDto() {}
+
+    @JsonProperty("project")
+    public void unpackProject(Object projectObj) {
+        // backend sends: { "project": { "id": 1, ... } }
+        try {
+            if (projectObj instanceof java.util.Map<?, ?> projectMap) {
+                Object idObj = projectMap.get("id");
+                if (idObj instanceof Number num) {
+                    this.projectId = num.longValue();
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
 
     public IdeaDto(Long id, String title, String category, String description,
                    IdeaStatus status, String primaryActor,
@@ -67,6 +88,7 @@ public class IdeaDto {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", status=" + status +
+                ", projectId=" + projectId +
                 '}';
     }
 }

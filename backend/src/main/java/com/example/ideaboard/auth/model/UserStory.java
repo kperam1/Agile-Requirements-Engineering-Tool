@@ -1,10 +1,13 @@
 package com.example.ideaboard.auth.model;
 
+import com.example.ideaboard.model.Project;
+import com.example.ideaboard.model.Sprint;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "user_stories")
+@Table(name = "user_story")
 public class UserStory {
 
     @Id
@@ -16,40 +19,33 @@ public class UserStory {
     @Column(length = 2000)
     private String description;
 
-    @Column(length = 2000)
     private String acceptanceCriteria;
-
-    private String assignedTo;
-
     private String priority;
+    private String assignedTo;
+    private boolean mvp;
+    private boolean sprintReady;
     private String status;
-    private Integer storyPoints;
+    private int storyPoints;
 
-    private Boolean mvp;
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    private Project project;
 
-    @Column(name = "sprint_ready")
-    private Boolean sprintReady;
+    @ManyToOne
+    @JoinColumn(name = "sprint_id")
+    @JsonBackReference("story-sprint")
+    private Sprint sprint;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "release_plan_id")
+    @JsonBackReference("release-story")
+    private ReleasePlan releasePlan;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    @Column(name = "completed_date")
+    private LocalDate completedDate;
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getTitle() {
@@ -76,6 +72,14 @@ public class UserStory {
         this.acceptanceCriteria = acceptanceCriteria;
     }
 
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
     public String getAssignedTo() {
         return assignedTo;
     }
@@ -84,12 +88,24 @@ public class UserStory {
         this.assignedTo = assignedTo;
     }
 
-    public String getPriority() {
-        return priority;
+    public boolean getMvp() {
+        return mvp;
     }
 
-    public void setPriority(String priority) {
-        this.priority = priority;
+    public void setMvp(boolean mvp) {
+        this.mvp = mvp;
+    }
+
+    public boolean getSprintReady() {
+        return sprintReady;
+    }
+
+    public void setSprintReady(boolean sprintReady) {
+        this.sprintReady = sprintReady;
+    }
+
+    public boolean isSprintReady() {
+        return sprintReady;
     }
 
     public String getStatus() {
@@ -100,43 +116,43 @@ public class UserStory {
         this.status = status;
     }
 
-    public Integer getStoryPoints() {
+    public int getStoryPoints() {
         return storyPoints;
     }
 
-    public void setStoryPoints(Integer storyPoints) {
+    public void setStoryPoints(int storyPoints) {
         this.storyPoints = storyPoints;
     }
 
-    public Boolean getMvp() {
-        return mvp;
+    public Project getProject() {
+        return project;
     }
 
-    public void setMvp(Boolean mvp) {
-        this.mvp = mvp;
+    public void setProject(Project project) {
+        this.project = project;
     }
 
-    public Boolean getSprintReady() {
-        return sprintReady;
+    public Sprint getSprint() {
+        return sprint;
     }
 
-    public void setSprintReady(Boolean sprintReady) {
-        this.sprintReady = sprintReady;
+    public void setSprint(Sprint sprint) {
+        this.sprint = sprint;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public ReleasePlan getReleasePlan() {
+        return releasePlan;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setReleasePlan(ReleasePlan releasePlan) {
+        this.releasePlan = releasePlan;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDate getCompletedDate() {
+        return completedDate;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCompletedDate(LocalDate completedDate) {
+        this.completedDate = completedDate;
     }
 }
