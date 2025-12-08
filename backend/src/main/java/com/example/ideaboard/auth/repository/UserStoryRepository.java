@@ -13,11 +13,16 @@ public interface UserStoryRepository extends JpaRepository<UserStory, Long> {
 
     long countByStatusIgnoreCase(String status);
 
-    // Correct Spring Data naming for @ManyToOne project
     List<UserStory> findByProject_Id(Long projectId);
 
-    // Optional alias — helps avoid errors in case controller uses it
-    List<UserStory> findByProjectId(Long projectId);
-
     List<UserStory> findBySprint_Id(Long sprintId);
+
+    List<UserStory> findByReleasePlan_Id(Long releasePlanId);
+
+    // ⭐ Needed for Assign Stories popup
+    List<UserStory> findByProject_IdAndReleasePlanIsNull(Long projectId);
+
+    
+
+    
 }

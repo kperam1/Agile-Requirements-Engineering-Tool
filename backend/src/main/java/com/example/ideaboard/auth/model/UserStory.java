@@ -2,11 +2,11 @@ package com.example.ideaboard.auth.model;
 
 import com.example.ideaboard.model.Project;
 import com.example.ideaboard.model.Sprint;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_stories")
+@Table(name = "user_story")
 public class UserStory {
 
     @Id
@@ -18,44 +18,42 @@ public class UserStory {
     @Column(length = 2000)
     private String description;
 
-    @Column(length = 2000)
+    // ------------------------------------
+    // Required fields used in controllers
+    // ------------------------------------
     private String acceptanceCriteria;
 
-    private String assignedTo;
+    private String priority;       
+    private String assignedTo;     
 
-    private String priority;
-    private String status;
-    private Integer storyPoints;
+    private boolean mvp;            
+    private boolean sprintReady;    
 
-    private Boolean mvp;
+    private String status;          // expected by Dashboard + Seeder
+    private int storyPoints;        // expected by Dashboard + Seeder
 
-    @Column(name = "sprint_ready")
-    private Boolean sprintReady;
-
+    // ------------------------------------
+    // Relationships
+    // ------------------------------------
     @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 
     @ManyToOne
     @JoinColumn(name = "sprint_id")
+    @JsonBackReference("story-sprint")
     private Sprint sprint;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "release_plan_id")
+    @JsonBackReference("release-story")
+    private ReleasePlan releasePlan;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    // ------------------------------------
+    // Getters + Setters
+    // ------------------------------------
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -66,26 +64,26 @@ public class UserStory {
     public String getAcceptanceCriteria() { return acceptanceCriteria; }
     public void setAcceptanceCriteria(String acceptanceCriteria) { this.acceptanceCriteria = acceptanceCriteria; }
 
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
+
     public String getAssignedTo() { return assignedTo; }
     public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
 
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public boolean getMvp() { return mvp; }
+    public void setMvp(boolean mvp) { this.mvp = mvp; }
+
+    public boolean getSprintReady() { return sprintReady; }
+    public void setSprintReady(boolean sprintReady) { this.sprintReady = sprintReady; }
+
+    // Dashboard expects isSprintReady()
+    public boolean isSprintReady() { return sprintReady; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Integer getStoryPoints() { return storyPoints; }
-    public void setStoryPoints(Integer storyPoints) { this.storyPoints = storyPoints; }
-
-    public Boolean getMvp() { return mvp; }
-    public void setMvp(Boolean mvp) { this.mvp = mvp; }
-
-    public Boolean getSprintReady() { return sprintReady; }
-    public void setSprintReady(Boolean sprintReady) { this.sprintReady = sprintReady; }
-
-    // ⭐ REQUIRED FIX — Spring Data expects this
-    public Boolean isSprintReady() { return sprintReady; }
+    public int getStoryPoints() { return storyPoints; }
+    public void setStoryPoints(int storyPoints) { this.storyPoints = storyPoints; }
 
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
@@ -93,9 +91,6 @@ public class UserStory {
     public Sprint getSprint() { return sprint; }
     public void setSprint(Sprint sprint) { this.sprint = sprint; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public ReleasePlan getReleasePlan() { return releasePlan; }
+    public void setReleasePlan(ReleasePlan releasePlan) { this.releasePlan = releasePlan; }
 }

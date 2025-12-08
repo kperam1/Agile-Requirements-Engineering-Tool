@@ -56,7 +56,6 @@ public class Workspace extends Application {
 
         stage.setScene(scene);
         stage.show();
-
         loadProjectsIntoDropdown();
     }
 
@@ -77,12 +76,16 @@ public class Workspace extends Application {
         Button backlogBtn = new Button("Backlog");
         Button sprintBtn = new Button("Sprint Board");
         Button sprintMgmtBtn = new Button("Manage Sprints");
+
+        // ⭐ NEW BUTTON
+        Button releasePlanBtn = new Button("Release Plan");
+
         Button reportsBtn = new Button("Reports");
         Button settingsBtn = new Button("Team Settings");
 
         sidebar.getChildren().addAll(
                 projectsBtn, dashboardBtn, ideationBtn, backlogBtn,
-                sprintBtn, sprintMgmtBtn, reportsBtn, settingsBtn
+                sprintBtn, sprintMgmtBtn, releasePlanBtn, reportsBtn, settingsBtn
         );
 
         projectsBtn.setOnAction(e -> switchView(new ProjectsView().getView(), "projects"));
@@ -95,16 +98,12 @@ public class Workspace extends Application {
                     showProjectNeeded();
                     return;
                 }
-
                 ProjectSession.setProjectId(selected.id());
                 refreshCurrentView();
-
-
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/com/example/ideaboard/views/review_ideas.fxml")
                 );
                 switchView(loader.load(), "ideation");
-
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -134,6 +133,15 @@ public class Workspace extends Application {
             switchView(new SprintManagementView().getView(), "sprintMgmt");
         });
 
+        // ⭐ NEW NAVIGATION HANDLER
+        releasePlanBtn.setOnAction(e -> {
+            if (!ProjectSession.hasProjectSelected()) {
+                showProjectNeeded();
+                return;
+            }
+            switchView(new ReleasePlanView().getView(), "releasePlan");
+        });
+
         reportsBtn.setOnAction(e -> switchView(new ReportsView().getView(), "reports"));
         settingsBtn.setOnAction(e -> switchView(new TeamSettingsView().getView(), "settings"));
 
@@ -158,8 +166,6 @@ public class Workspace extends Application {
             if (selected == null) return;
 
             ProjectSession.setProjectId(selected.id());
-            System.out.println("Selected projectId = " + ProjectSession.getProjectId());
-
             refreshCurrentView();
         });
 
@@ -174,12 +180,8 @@ public class Workspace extends Application {
                 showProjectNeeded();
                 return;
             }
-
-            try {
-                DialogHelper.openCreateIdeaDialog();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            try { DialogHelper.openCreateIdeaDialog(); }
+            catch (Exception ex) { ex.printStackTrace(); }
         });
 
         topBar.getChildren().addAll(headerTitle, projectSelector, spacer, createBtn);
@@ -201,17 +203,18 @@ public class Workspace extends Application {
             case "reports" -> switchView(new ReportsView().getView(), "reports");
             case "projects" -> switchView(new ProjectsView().getView(), "projects");
             case "ideation" -> {
-    try {
-        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                getClass().getResource("/com/example/ideaboard/views/review_ideas.fxml")
-        );
-        Pane newView = loader.load();
-        switchView(newView, "ideation");
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
+                try {
+                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                            getClass().getResource("/com/example/ideaboard/views/review_ideas.fxml")
+                    );
+                    switchView(loader.load(), "ideation");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
+            // ⭐ REFRESH FOR RELEASE PLAN
+            case "releasePlan" -> switchView(new ReleasePlanView().getView(), "releasePlan");
         }
     }
 
@@ -231,7 +234,6 @@ public class Workspace extends Application {
 
                 Platform.runLater(() -> {
                     projectSelector.getItems().clear();
-
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject o = arr.getJSONObject(i);
                         ProjectItem item = new ProjectItem(o.getLong("id"), o.getString("name"));
@@ -239,7 +241,6 @@ public class Workspace extends Application {
 
                         if (ProjectSession.getProjectId() == item.id()) {
                             projectSelector.setValue(item);
-                            ProjectSession.setProjectId(item.id());
                         }
                     }
                 });
@@ -253,7 +254,6 @@ public class Workspace extends Application {
     public static void refreshProjectsDropdown() {
         if (instance != null) {
             instance.loadProjectsIntoDropdown();
-
             if (instance.currentViewName.equals("projects")) {
                 Platform.runLater(() ->
                         instance.switchView(new ProjectsView().getView(), "projects")
@@ -272,7 +272,6 @@ public class Workspace extends Application {
                 if (item.id() == projectId)
                     instance.projectSelector.setValue(item);
             });
-
             instance.switchView(new DashboardView().getView(), "dashboard");
         });
     }
@@ -285,13 +284,8 @@ public class Workspace extends Application {
     }
 
     private record ProjectItem(long id, String name) {
-        @Override
-        public String toString() {
-            return name;
-        }
+        public String toString() { return name; }
     }
 
-    public static void main(String[] args) {
-        launch();
-    }
+    public static void main(String[] args) { launch(); }
 }

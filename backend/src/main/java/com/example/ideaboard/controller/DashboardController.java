@@ -29,25 +29,36 @@ public class DashboardController {
         List<UserStory> projectStories = userStoryRepository.findByProject_Id(projectId);
         int userStories = projectStories.size();
 
+        // sprintReady is boolean, no null check needed
         int sprintReady = (int) projectStories.stream()
-                .filter(s -> Boolean.TRUE.equals(s.isSprintReady()))
+                .filter(UserStory::isSprintReady)
                 .count();
 
+        // storyPoints is now primitive int (never null)
         int totalPoints = projectStories.stream()
-                .filter(s -> s.getStoryPoints() != null)
                 .mapToInt(UserStory::getStoryPoints)
                 .sum();
 
         int donePoints = projectStories.stream()
-                .filter(s -> s.getStoryPoints() != null &&
-                             "Done".equalsIgnoreCase(s.getStatus()))
+                .filter(s -> "Done".equalsIgnoreCase(s.getStatus()))
                 .mapToInt(UserStory::getStoryPoints)
                 .sum();
 
-        long todoCount = projectStories.stream().filter(s -> "To Do".equalsIgnoreCase(s.getStatus())).count();
-        long inProgressCount = projectStories.stream().filter(s -> "In Progress".equalsIgnoreCase(s.getStatus())).count();
-        long testingCount = projectStories.stream().filter(s -> "Testing".equalsIgnoreCase(s.getStatus())).count();
-        long doneCount = projectStories.stream().filter(s -> "Done".equalsIgnoreCase(s.getStatus())).count();
+        long todoCount = projectStories.stream()
+                .filter(s -> "To Do".equalsIgnoreCase(s.getStatus()))
+                .count();
+
+        long inProgressCount = projectStories.stream()
+                .filter(s -> "In Progress".equalsIgnoreCase(s.getStatus()))
+                .count();
+
+        long testingCount = projectStories.stream()
+                .filter(s -> "Testing".equalsIgnoreCase(s.getStatus()))
+                .count();
+
+        long doneCount = projectStories.stream()
+                .filter(s -> "Done".equalsIgnoreCase(s.getStatus()))
+                .count();
 
         double progress = 0.0;
         if (totalPoints > 0) {

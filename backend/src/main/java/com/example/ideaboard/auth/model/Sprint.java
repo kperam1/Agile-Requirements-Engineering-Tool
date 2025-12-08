@@ -1,10 +1,12 @@
 package com.example.ideaboard.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,4 +28,9 @@ public class Sprint {
     private LocalDate endDate;
 
     private String status;
+
+    // Prevent recursion from: Sprint → Stories → Sprint → Stories ...
+    @JsonIgnore
+    @OneToMany(mappedBy = "sprint")
+    private List<com.example.ideaboard.auth.model.UserStory> stories;
 }

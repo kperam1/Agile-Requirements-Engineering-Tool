@@ -330,75 +330,90 @@ public class DashboardView {
         }).start();
     }
 
-    private void loadSprintData() {
-        new Thread(() -> {
-            try {
-                long projectId = ProjectSession.getProjectId();
+   
+                private void loadSprintData() {
+    new Thread(() -> {
+        try {
+            long projectId = ProjectSession.getProjectId();
 
-                if (projectId <= 0) {
-                    Platform.runLater(() -> {
-                        sprintNameLabel.setText("Total stories: 0");
-                        todoLabel.setText("To Do: 0");
-                        inProgressLabel.setText("In Progress: 0");
-                        testingLabel.setText("Testing: 0");
-                        doneLabel.setText("Done: 0");
-                    });
-                    return;
-                }
-
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/userstories/project/" + projectId))
-                        .build();
-
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() != 200) return;
-
-                JSONArray stories = new JSONArray(response.body());
-
-                int todo = 0, inProgress = 0, testing = 0, done = 0;
-                int totalStories = stories.length();
-
-                int totalPoints = 0;
-                int donePoints = 0;
-
-                for (int i = 0; i < stories.length(); i++) {
-                    JSONObject s = stories.getJSONObject(i);
-                    String status = s.optString("status", "");
-                    Integer sp = s.isNull("storyPoints") ? null : s.optInt("storyPoints");
-
-                    switch (status.toLowerCase()) {
-                        case "to do":
-                        case "backlog": todo++; break;
-                        case "in progress": inProgress++; break;
-                        case "testing": testing++; break;
-                        case "done": done++; break;
-                    }
-
-                    if (sp != null && sp > 0) {
-                        totalPoints += sp;
-                        if ("done".equalsIgnoreCase(status)) donePoints += sp;
-                    }
-                }
-
-                double progress = totalPoints > 0 ? (double) donePoints / totalPoints : 0.0;
-
-                int fTodo = todo, fInProg = inProgress, fTesting = testing, fDone = done, fTotal = totalStories;
-                double fProgress = progress;
-
+            if (projectId <= 0) {
                 Platform.runLater(() -> {
-                    sprintNameLabel.setText("Total stories: " + fTotal);
-                    sprintProgressBar.setProgress(fProgress);
-                    todoLabel.setText("To Do: " + fTodo);
-                    inProgressLabel.setText("In Progress: " + fInProg);
-                    testingLabel.setText("Testing: " + fTesting);
-                    doneLabel.setText("Done: " + fDone);
+                    sprintNameLabel.setText("Total stories: 0");
+                    todoLabel.setText("To Do: 0");
+                    inProgressLabel.setText("In Progress: 0");
+                    testingLabel.setText("Testing: 0");
+                    doneLabel.setText("Done: 0");
+                    sprintProgressBar.setProgress(0);
                 });
-
-            } catch (Exception e) {
-                e.printStackTrace();
+                return;
             }
-        }).start();
-    }
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/api/userstories/project/" + projectId))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // ***** SAFETY CHECKS ADDED *****
+            if (response.statusCode() != 200) {
+                System.out.println("SprintData: backend returned " + response.statusCode());
+                return;
+            }
+
+            String body = response.body();
+            if (body == null || body.isBlank() || body.equals("null")) {
+                // empty safe default
+                body = "[]";
+            }
+
+            JSONArray stories = new JSONArray(body);
+
+            int todo = 0, inProgress = 0, testing = 0, done = 0;
+            int totalStories = stories.length();
+
+            int totalPoints = 0, donePoints = 0;
+
+            for (int i = 0; i < stories.length(); i++) {
+                JSONObject s = stories.getJSONObject(i);
+                String status = s.optString("status", "");
+                Integer sp = s.isNull("storyPoints") ? null : s.optInt("storyPoints");
+
+                switch (status.toLowerCase()) {
+                    case "to do":
+                    case "backlog": todo++; break;
+                    case "in progress": inProgress++; break;
+                    case "testing": testing++; break;
+                    case "done": done++; break;
+                }
+
+                if (sp != null && sp > 0) {
+                    totalPoints += sp;
+                    if ("done".equalsIgnoreCase(status)) donePoints += sp;
+                }
+            }
+
+            double progress = totalPoints > 0 ? (double) donePoints / totalPoints : 0.0;
+
+            int fTodo = todo, fInProg = inProgress, fTesting = testing, fDone = done, fTotal = totalStories;
+            double fProgress = progress;
+
+            Platform.runLater(() -> {
+                sprintNameLabel.setText("Total stories: " + fTotal);
+                sprintProgressBar.setProgress(fProgress);
+                todoLabel.setText("To Do: " + fTodo);
+                inProgressLabel.setText("In Progress: " + fInProg);
+                testingLabel.setText("Testing: " + fTesting);
+                doneLabel.setText("Done: " + fDone);
+            });
+
+        } catch (Exception e) {
+            System.out.println("Error in loadSprintData: " + e.getMessage());
+        }
+    }).start();
+}
+
+
+               
+
 }
