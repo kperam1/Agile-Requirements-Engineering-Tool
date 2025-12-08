@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.ideaboard.frontend.ReportController">
+
+    <top>
+        <VBox spacing="8" padding="12">
+            <Label text="UC-08: Generate Reports and Metrics"
+                   style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+            <HBox spacing="8">
+                <Label text="Sprint ID:" />
+                <TextField fx:id="sprintIdField" promptText="e.g. 5" prefWidth="100"/>
+
+                <Button text="Generate Reports"
+                        fx:id="generateButton"
+                        onAction="#onGenerateReports"/>
+
+                <Label fx:id="statusLabel" textFill="gray" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.35">
+            <VBox spacing="10" padding="10">
+                <TitledPane text="Velocity" expanded="true">
+                    <VBox spacing="6" padding="8">
+                        <Label text="Completed Story Points:" />
+                        <Label fx:id="velocityPointsLabel"
+                               style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                        <Label text="Stories Completed:" />
+                        <Label fx:id="storiesCompletedLabel" />
+                    </VBox>
+                </TitledPane>
+
+                <TitledPane text="Summary" expanded="true">
+                    <TextArea fx:id="summaryArea"
+                              prefRowCount="8"
+                              wrapText="true" />
+                </TitledPane>
+            </VBox>
+
+            <VBox spacing="10" padding="10">
+                <Label text="Burndown Chart (Remaining Points per Day)" />
+                <LineChart fx:id="burndownChart"
+                           prefHeight="400"
+                           prefWidth="500">
+                    <xAxis>
+                        <NumberAxis fx:id="xAxis"
+                                    label="Day"
+                                    side="BOTTOM" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis fx:id="yAxis"
+                                    label="Remaining Story Points"
+                                    side="LEFT" />
+                    </yAxis>
+                </LineChart>
+            </VBox>
+        </SplitPane>
+    </center>
+
+</BorderPane>
