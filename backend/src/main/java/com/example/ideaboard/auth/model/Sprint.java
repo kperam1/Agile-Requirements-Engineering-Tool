@@ -29,7 +29,6 @@ public class Sprint {
 
     private String status;
 
-    // Prevent recursion from: Sprint → Stories → Sprint → Stories ...
     @JsonIgnore
     @OneToMany(mappedBy = "sprint")
     private List<com.example.ideaboard.auth.model.UserStory> stories;

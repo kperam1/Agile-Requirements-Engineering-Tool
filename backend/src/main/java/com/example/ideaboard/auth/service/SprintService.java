@@ -1,7 +1,7 @@
 package com.example.ideaboard.auth.service;
 
 import com.example.ideaboard.model.Sprint;
-import com.example.ideaboard.repository.SprintRepository;
+import com.example.ideaboard.auth.repository.SprintRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

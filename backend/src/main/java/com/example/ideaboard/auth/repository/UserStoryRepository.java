@@ -3,7 +3,6 @@ package com.example.ideaboard.auth.repository;
 import com.example.ideaboard.auth.model.UserStory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository
@@ -19,10 +18,5 @@ public interface UserStoryRepository extends JpaRepository<UserStory, Long> {
 
     List<UserStory> findByReleasePlan_Id(Long releasePlanId);
 
-    // ⭐ Needed for Assign Stories popup
     List<UserStory> findByProject_IdAndReleasePlanIsNull(Long projectId);
-
-    
-
-    
 }
