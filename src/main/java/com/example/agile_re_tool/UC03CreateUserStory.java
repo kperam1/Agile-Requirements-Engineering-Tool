@@ -1,5 +1,8 @@
 package com.example.agile_re_tool;
 
+import com.example.agile_re_tool.session.ProjectSession;
+import com.example.agile_re_tool.util.SprintFetcher;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
@@ -108,6 +111,13 @@ public class UC03CreateUserStory extends Application {
         HBox sprintBox = new HBox(12, new Label("Sprint Ready"), sprintToggle, new Label("Ready for Sprint"));
         sprintBox.setAlignment(Pos.CENTER_LEFT);
 
+        ComboBox<String> sprintDropdown = new ComboBox<>();
+        Map<String, Long> sprintMap = SprintFetcher.fetchSprints();
+
+        sprintDropdown.getItems().add("None");
+        sprintDropdown.getItems().addAll(sprintMap.keySet());
+        sprintDropdown.setValue("None");
+
         GridPane grid = new GridPane();
         grid.setHgap(12);
         grid.setVgap(12);
@@ -131,6 +141,7 @@ public class UC03CreateUserStory extends Application {
         grid.add(new Label("Status"), 0, r); grid.add(statusCombo, 1, r++);
         grid.add(new Label("MVP"), 0, r); grid.add(mvpBox, 1, r++);
         grid.add(new Label("Sprint Ready"), 0, r); grid.add(sprintBox, 1, r++);
+        grid.add(new Label("Sprint"), 0, r); grid.add(sprintDropdown, 1, r++);
 
         Button cancelBtn = new Button("Cancel");
         Button addBtn = new Button("Add Task");
@@ -165,6 +176,14 @@ public class UC03CreateUserStory extends Application {
             json.put("mvp", mvpToggle.isSelected());
             json.put("sprintReady", sprintToggle.isSelected());
 
+            json.put("project", new JSONObject().put("id", ProjectSession.getProjectId()));
+
+            if (!"None".equals(sprintDropdown.getValue())) {
+                json.put("sprint", new JSONObject().put("id", sprintMap.get(sprintDropdown.getValue())));
+            } else {
+                json.put("sprint", JSONObject.NULL);
+            }
+
             String estType = estimateTypeCombo.getValue();
             int storyPoints = defaultStoryPoints;
 
@@ -184,9 +203,12 @@ public class UC03CreateUserStory extends Application {
 
             new Thread(() -> {
                 try {
+                    Long projectId = ProjectSession.getProjectId();
+                    String url = "http://localhost:8080/api/projects/" + projectId + "/stories";
+
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create("http://localhost:8080/api/userstories"))
+                            .uri(URI.create(url))
                             .header("Content-Type", "application/json")
                             .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                             .build();
@@ -218,7 +240,6 @@ public class UC03CreateUserStory extends Application {
         ToggleButton toggle = new ToggleButton();
         toggle.setPrefWidth(52);
         toggle.setPrefHeight(28);
-        toggle.setFocusTraversable(false);
         toggle.setText("");
 
         StackPane knob = new StackPane();

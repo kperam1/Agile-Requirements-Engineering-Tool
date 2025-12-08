@@ -21,48 +21,44 @@ public class DashboardController {
     @Autowired
     private UserStoryRepository userStoryRepository;
 
-    @GetMapping
-    public Map<String, Object> getDashboard() {
+    @GetMapping("/{projectId}")
+    public Map<String, Object> getDashboardForProject(@PathVariable Long projectId) {
 
-        int totalIdeas = ideaRepository.findAll().size();
-        int userStories = userStoryRepository.findAll().size();
+        int totalIdeas = ideaRepository.countByProject_Id(projectId);
 
-        int sprintReady = userStoryRepository.countBySprintReadyTrue();
+        List<UserStory> projectStories = userStoryRepository.findByProject_Id(projectId);
+        int userStories = projectStories.size();
 
-        List<UserStory> allStories = userStoryRepository.findAll();
+        // sprintReady is boolean, no null check needed
+        int sprintReady = (int) projectStories.stream()
+                .filter(UserStory::isSprintReady)
+                .count();
 
-        int teamVelocity = allStories.stream()
-                .filter(s -> s.getStatus() != null && s.getStatus().equalsIgnoreCase("Done"))
-                .mapToInt(s -> s.getStoryPoints() == null ? 0 : s.getStoryPoints())
+        // storyPoints is now primitive int (never null)
+        int totalPoints = projectStories.stream()
+                .mapToInt(UserStory::getStoryPoints)
                 .sum();
 
-        long todoCount = allStories.stream()
+        int donePoints = projectStories.stream()
+                .filter(s -> "Done".equalsIgnoreCase(s.getStatus()))
+                .mapToInt(UserStory::getStoryPoints)
+                .sum();
+
+        long todoCount = projectStories.stream()
                 .filter(s -> "To Do".equalsIgnoreCase(s.getStatus()))
                 .count();
 
-        long inProgressCount = allStories.stream()
+        long inProgressCount = projectStories.stream()
                 .filter(s -> "In Progress".equalsIgnoreCase(s.getStatus()))
                 .count();
 
-        long testingCount = allStories.stream()
+        long testingCount = projectStories.stream()
                 .filter(s -> "Testing".equalsIgnoreCase(s.getStatus()))
                 .count();
 
-        long doneCount = allStories.stream()
+        long doneCount = projectStories.stream()
                 .filter(s -> "Done".equalsIgnoreCase(s.getStatus()))
                 .count();
-
-        int totalPoints = allStories.stream()
-                .filter(s -> s.getStoryPoints() != null)
-                .mapToInt(UserStory::getStoryPoints)
-                .sum();
-
-        int donePoints = allStories.stream()
-                .filter(s -> s.getStoryPoints() != null
-                        && s.getStatus() != null
-                        && s.getStatus().equalsIgnoreCase("Done"))
-                .mapToInt(UserStory::getStoryPoints)
-                .sum();
 
         double progress = 0.0;
         if (totalPoints > 0) {
@@ -73,10 +69,9 @@ public class DashboardController {
         out.put("totalIdeas", totalIdeas);
         out.put("userStories", userStories);
         out.put("sprintReady", sprintReady);
-        out.put("teamVelocity", teamVelocity);
+        out.put("teamVelocity", donePoints);
 
         Map<String, Object> sprint = new HashMap<>();
-        sprint.put("name", "Active Sprint");
         sprint.put("todoCount", todoCount);
         sprint.put("inProgressCount", inProgressCount);
         sprint.put("testingCount", testingCount);

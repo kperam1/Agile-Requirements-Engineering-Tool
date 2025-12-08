@@ -19,6 +19,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import com.example.agile_re_tool.UC03CreateUserStory;
+import com.example.agile_re_tool.session.ProjectSession;
 
 public class DashboardView {
 
@@ -75,6 +76,10 @@ public class DashboardView {
         return pane;
     }
 
+    // -------------------------------------------------------------------------
+    // UI COMPONENTS
+    // -------------------------------------------------------------------------
+
     private VBox createInfoCard(String title, StringProperty mainValue, String subtitle, String colorClass) {
         VBox card = new VBox(5);
         card.setAlignment(Pos.CENTER_LEFT);
@@ -114,46 +119,59 @@ public class DashboardView {
         ideasScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         ideasScroll.setStyle("-fx-background-color: transparent; -fx-background-insets: 0;");
 
+        long projectId = ProjectSession.getProjectId();
+
         new Thread(() -> {
             try {
+                if (projectId <= 0) {
+                    Platform.runLater(() -> {
+                        ideasContainer.getChildren().clear();
+                        ideasContainer.getChildren().add(new Label("Please select a project."));
+                    });
+                    return;
+                }
+
                 HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/ideas"))
-                        .build();
+             HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://localhost:8080/api/projects/" + projectId + "/ideas"))
+        .build();
+
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 200) {
-                    JSONArray ideas = new JSONArray(response.body());
 
-                    Platform.runLater(() -> {
-                        ideasContainer.getChildren().clear();
-                        if (ideas.length() == 0) {
-                            ideasContainer.getChildren().add(new Label("No ideas found."));
-                        } else {
-                            for (int i = 0; i < ideas.length(); i++) {
-                                JSONObject idea = ideas.getJSONObject(i);
-                                String titleText = idea.optString("title", "Untitled Idea");
-                                String desc = idea.optString("description", "No description provided");
-                                String status = idea.optString("status", "New");
-                                ideasContainer.getChildren().add(
-                                        createIdeaCard(i + 1, titleText, desc, status)
-                                );
-                            }
-                        }
-                    });
-                } else {
-                    Platform.runLater(() -> {
-                        ideasContainer.getChildren().clear();
+                Platform.runLater(() -> {
+                    ideasContainer.getChildren().clear();
+
+                    if (response.statusCode() != 200) {
                         ideasContainer.getChildren().add(
-                                new Label("Failed to load ideas (status " + response.statusCode() + ")")
+                                new Label("Failed to load ideas (" + response.statusCode() + ")")
                         );
-                    });
-                }
+                        return;
+                    }
+
+                    JSONArray ideas = new JSONArray(response.body());
+                    if (ideas.length() == 0) {
+                        ideasContainer.getChildren().add(new Label("No ideas for this project."));
+                        return;
+                    }
+
+                    for (int i = 0; i < ideas.length(); i++) {
+                        JSONObject idea = ideas.getJSONObject(i);
+                        String titleText = idea.optString("title", "Untitled Idea");
+                        String descText = idea.optString("description", "No description provided");
+                        String status = idea.optString("status", "NEW");
+
+                        ideasContainer.getChildren().add(
+                                createIdeaCard(i + 1, titleText, descText, status)
+                        );
+                    }
+                });
+
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> {
                     ideasContainer.getChildren().clear();
-                    ideasContainer.getChildren().add(new Label("Error fetching ideas from backend."));
+                    ideasContainer.getChildren().add(new Label("Error fetching ideas."));
                 });
             }
         }).start();
@@ -176,10 +194,7 @@ public class DashboardView {
                         "-fx-padding: 3 10; -fx-background-radius: 12; -fx-font-size: 11;"
         );
 
-        HBox statusRow = new HBox(statusBadge);
-        statusRow.setAlignment(Pos.CENTER_LEFT);
-
-        VBox card = new VBox(6, titleLabel, descLabel, statusRow);
+        VBox card = new VBox(6, titleLabel, descLabel, statusBadge);
         card.setPadding(new Insets(12));
         card.setMaxWidth(Double.MAX_VALUE);
         card.setStyle(
@@ -214,13 +229,7 @@ public class DashboardView {
         testingLabel = new Label("Testing: 0");
         doneLabel = new Label("Done: 0");
 
-        VBox statusList = new VBox(5);
-        statusList.getChildren().addAll(
-                todoLabel,
-                inProgressLabel,
-                testingLabel,
-                doneLabel
-        );
+        VBox statusList = new VBox(5, todoLabel, inProgressLabel, testingLabel, doneLabel);
 
         sprintBox.getChildren().addAll(title, sprintNameLabel, sprintProgressBar, statusList);
         return sprintBox;
@@ -281,12 +290,28 @@ public class DashboardView {
         return card;
     }
 
+    // -------------------------------------------------------------------------
+    // BACKEND INTEGRATIONS (UPDATED WITH PROJECT ID)
+    // -------------------------------------------------------------------------
+
     private void loadDashboardData() {
         new Thread(() -> {
             try {
+                long projectId = ProjectSession.getProjectId();
+
+                if (projectId <= 0) {
+                    Platform.runLater(() -> {
+                        totalIdeas.set("0");
+                        userStories.set("0");
+                        sprintReady.set("0");
+                        teamVelocity.set("0");
+                    });
+                    return;
+                }
+
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/dashboard"))
+                        .uri(URI.create("http://localhost:8080/api/dashboard/" + projectId))
                         .build();
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -305,75 +330,90 @@ public class DashboardView {
         }).start();
     }
 
-    private void loadSprintData() {
-        new Thread(() -> {
-            try {
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/userstories"))
-                        .build();
+   
+                private void loadSprintData() {
+    new Thread(() -> {
+        try {
+            long projectId = ProjectSession.getProjectId();
 
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() != 200) return;
-
-                JSONArray stories = new JSONArray(response.body());
-
-                int todo = 0;
-                int inProgress = 0;
-                int testing = 0;
-                int done = 0;
-                int totalStories = stories.length();
-
-                int totalPoints = 0;
-                int donePoints = 0;
-
-                for (int i = 0; i < stories.length(); i++) {
-                    JSONObject s = stories.getJSONObject(i);
-                    String status = s.optString("status", "");
-                    Integer sp = s.isNull("storyPoints") ? null : s.optInt("storyPoints");
-
-                    if ("To Do".equalsIgnoreCase(status) || "Backlog".equalsIgnoreCase(status)) {
-                        todo++;
-                    } else if ("In Progress".equalsIgnoreCase(status)) {
-                        inProgress++;
-                    } else if ("Testing".equalsIgnoreCase(status)) {
-                        testing++;
-                    } else if ("Done".equalsIgnoreCase(status)) {
-                        done++;
-                    }
-
-                    if (sp != null && sp > 0) {
-                        totalPoints += sp;
-                        if ("Done".equalsIgnoreCase(status)) {
-                            donePoints += sp;
-                        }
-                    }
-                }
-
-                double progress = 0.0;
-                if (totalPoints > 0) {
-                    progress = (double) donePoints / (double) totalPoints;
-                }
-
-                int finalTodo = todo;
-                int finalInProgress = inProgress;
-                int finalTesting = testing;
-                int finalDone = done;
-                int finalTotalStories = totalStories;
-                double finalProgress = progress;
-
+            if (projectId <= 0) {
                 Platform.runLater(() -> {
-                    sprintNameLabel.setText("Total stories: " + finalTotalStories);
-                    sprintProgressBar.setProgress(finalProgress);
-                    todoLabel.setText("To Do: " + finalTodo);
-                    inProgressLabel.setText("In Progress: " + finalInProgress);
-                    testingLabel.setText("Testing: " + finalTesting);
-                    doneLabel.setText("Done: " + finalDone);
+                    sprintNameLabel.setText("Total stories: 0");
+                    todoLabel.setText("To Do: 0");
+                    inProgressLabel.setText("In Progress: 0");
+                    testingLabel.setText("Testing: 0");
+                    doneLabel.setText("Done: 0");
+                    sprintProgressBar.setProgress(0);
                 });
-
-            } catch (Exception e) {
-                e.printStackTrace();
+                return;
             }
-        }).start();
-    }
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/api/userstories/project/" + projectId))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // ***** SAFETY CHECKS ADDED *****
+            if (response.statusCode() != 200) {
+                System.out.println("SprintData: backend returned " + response.statusCode());
+                return;
+            }
+
+            String body = response.body();
+            if (body == null || body.isBlank() || body.equals("null")) {
+                // empty safe default
+                body = "[]";
+            }
+
+            JSONArray stories = new JSONArray(body);
+
+            int todo = 0, inProgress = 0, testing = 0, done = 0;
+            int totalStories = stories.length();
+
+            int totalPoints = 0, donePoints = 0;
+
+            for (int i = 0; i < stories.length(); i++) {
+                JSONObject s = stories.getJSONObject(i);
+                String status = s.optString("status", "");
+                Integer sp = s.isNull("storyPoints") ? null : s.optInt("storyPoints");
+
+                switch (status.toLowerCase()) {
+                    case "to do":
+                    case "backlog": todo++; break;
+                    case "in progress": inProgress++; break;
+                    case "testing": testing++; break;
+                    case "done": done++; break;
+                }
+
+                if (sp != null && sp > 0) {
+                    totalPoints += sp;
+                    if ("done".equalsIgnoreCase(status)) donePoints += sp;
+                }
+            }
+
+            double progress = totalPoints > 0 ? (double) donePoints / totalPoints : 0.0;
+
+            int fTodo = todo, fInProg = inProgress, fTesting = testing, fDone = done, fTotal = totalStories;
+            double fProgress = progress;
+
+            Platform.runLater(() -> {
+                sprintNameLabel.setText("Total stories: " + fTotal);
+                sprintProgressBar.setProgress(fProgress);
+                todoLabel.setText("To Do: " + fTodo);
+                inProgressLabel.setText("In Progress: " + fInProg);
+                testingLabel.setText("Testing: " + fTesting);
+                doneLabel.setText("Done: " + fDone);
+            });
+
+        } catch (Exception e) {
+            System.out.println("Error in loadSprintData: " + e.getMessage());
+        }
+    }).start();
+}
+
+
+               
+
 }

@@ -2,6 +2,7 @@ package com.example.agile_re_tool.ui;
 
 import com.example.agile_re_tool.UC04EditUserStory;
 import com.example.agile_re_tool.UC03CreateUserStory;
+import com.example.agile_re_tool.session.ProjectSession;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,8 +25,7 @@ public class BacklogView {
     private VBox backlogList;
     private JSONArray fullData = new JSONArray();
 
-    public BacklogView() {
-    }
+    public BacklogView() {}
 
     public BorderPane getView() {
         BorderPane root = new BorderPane();
@@ -70,14 +70,30 @@ public class BacklogView {
     }
 
     private void loadUserStories() {
+        Long projectId = ProjectSession.getProjectId();
+
+        if (projectId == null) {
+            Platform.runLater(() -> {
+                backlogList.getChildren().clear();
+                Label msg = new Label("Select a project to view backlog.");
+                msg.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
+                backlogList.getChildren().add(msg);
+            });
+            return;
+        }
+
         new Thread(() -> {
             try {
+                String url = "http://localhost:8080/api/userstories/project/" + projectId;
+
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest req = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/userstories"))
+                        .uri(URI.create(url))
                         .GET()
                         .build();
+
                 HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
+
                 if (response.statusCode() == 200) {
                     Platform.runLater(() -> updateUI(response.body()));
                 }
@@ -104,7 +120,7 @@ public class BacklogView {
         backlogList.getChildren().clear();
 
         if (data.length() == 0) {
-            Label empty = new Label("No backlog items match.");
+            Label empty = new Label("No backlog items found for this project.");
             empty.setStyle("-fx-text-fill: #777; -fx-font-size: 14;");
             backlogList.getChildren().add(empty);
             return;
@@ -140,6 +156,7 @@ public class BacklogView {
         JSONArray result = new JSONArray();
         for (int i = 0; i < fullData.length(); i++) {
             JSONObject o = fullData.getJSONObject(i);
+
             String t = o.optString("title", "").toLowerCase();
             String d = o.optString("description", "").toLowerCase();
             String a = o.optString("assignedTo", "").toLowerCase();
