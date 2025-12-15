@@ -32,4 +32,9 @@ public class Sprint {
     @JsonIgnore
     @OneToMany(mappedBy = "sprint")
     private List<com.example.ideaboard.auth.model.UserStory> stories;
+
+    public void setId(Long id) {
+    this.id = id;
+}
+
 }

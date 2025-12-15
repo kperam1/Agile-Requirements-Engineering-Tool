@@ -115,12 +115,6 @@ public class UC04EditUserStory extends Application {
 
         TextField timeEstimateField = new TextField();
 
-        if (existing.estimateType.equals("T-shirt Sizes") && existing.size != null)
-            tshirtCombo.getSelectionModel().select(existing.size);
-
-        if (existing.estimateType.equals("Time") && existing.timeEstimate != null)
-            timeEstimateField.setText(existing.timeEstimate);
-
         ComboBox<String> priorityCombo = new ComboBox<>();
         priorityCombo.getItems().addAll("Low", "Medium", "High");
         priorityCombo.getSelectionModel().select(existing.priority);
@@ -152,15 +146,22 @@ public class UC04EditUserStory extends Application {
 
         Map<String, Long> sprintMap = SprintFetcher.fetchSprints();
         ComboBox<String> sprintDropdown = new ComboBox<>();
+
+        // Populate dropdown
         sprintDropdown.getItems().add("None");
         sprintDropdown.getItems().addAll(sprintMap.keySet());
-        sprintDropdown.setValue("None");
 
+        // Load existing sprint from backend
         existingSprintId = loadExistingSprintId(editingId);
+
         if (existingSprintId != null) {
             sprintMap.forEach((name, id) -> {
-                if (id.equals(existingSprintId)) sprintDropdown.setValue(name);
+                if (id.equals(existingSprintId)) {
+                    sprintDropdown.setValue(name);
+                }
             });
+        } else {
+            sprintDropdown.setValue("None");
         }
 
         VBox rightColumn = new VBox(16,
@@ -258,13 +259,16 @@ public class UC04EditUserStory extends Application {
         d.description = obj.optString("description", "");
         d.acceptanceCriteria = obj.optString("acceptanceCriteria", "");
         d.assignee = obj.optString("assignedTo", null);
+
         d.estimateType = "Story Points";
         int sp = obj.optInt("storyPoints", 0);
         d.storyPoints = sp == 0 ? null : sp;
+
         d.priority = obj.optString("priority", defaultPriority);
         d.status = obj.optString("status", defaultStatus);
         d.mvp = obj.optBoolean("mvp", false);
         d.sprintReady = obj.optBoolean("sprintReady", false);
+
         return d;
     }
 
@@ -297,7 +301,7 @@ public class UC04EditUserStory extends Application {
         return dto;
     }
 
-    private void updateStoryJson(long id, CreateStoryDto dto,
+        private void updateStoryJson(long id, CreateStoryDto dto,
                                  ComboBox<String> sprintDropdown,
                                  Map<String, Long> sprintMap) throws Exception {
 
@@ -313,9 +317,13 @@ public class UC04EditUserStory extends Application {
         obj.put("sprintReady", dto.sprintReady);
         obj.put("project", new JSONObject().put("id", ProjectSession.getProjectId()));
 
+        // ⭐ FIXED: Sprint assignment logic
         if (!"None".equals(sprintDropdown.getValue())) {
-            obj.put("sprint", new JSONObject().put("id", sprintMap.get(sprintDropdown.getValue())));
-        } else obj.put("sprint", JSONObject.NULL);
+            Long sprintId = sprintMap.get(sprintDropdown.getValue());
+            obj.put("sprint", new JSONObject().put("id", sprintId));
+        } else {
+            obj.put("sprint", JSONObject.NULL);
+        }
 
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/api/userstories/" + id))

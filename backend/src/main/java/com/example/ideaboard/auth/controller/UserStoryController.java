@@ -36,6 +36,14 @@ public class UserStoryController {
             @PathVariable Long projectId,
             @RequestBody UserStory story
     ) {
+
+        System.out.println("=== CREATE STORY DEBUG ===");
+        System.out.println("Incoming sprint: " + story.getSprint());
+        if (story.getSprint() != null)
+            System.out.println("Incoming sprint ID: " + story.getSprint().getId());
+        else
+            System.out.println("Incoming sprint is NULL");
+
         Project project = projectRepository.findById(projectId).orElse(null);
         if (project == null) return ResponseEntity.notFound().build();
 
@@ -63,8 +71,17 @@ public class UserStoryController {
             @PathVariable Long id,
             @RequestBody UserStory incoming
     ) {
+
+        System.out.println("=== UPDATE STORY DEBUG ===");
+        System.out.println("Incoming sprint: " + incoming.getSprint());
+        if (incoming.getSprint() != null)
+            System.out.println("Incoming sprint ID: " + incoming.getSprint().getId());
+        else
+            System.out.println("Incoming sprint is NULL");
+
         return userStoryRepository.findById(id)
                 .map(existing -> {
+
                     String oldStatus = existing.getStatus();
                     String newStatus = incoming.getStatus();
 

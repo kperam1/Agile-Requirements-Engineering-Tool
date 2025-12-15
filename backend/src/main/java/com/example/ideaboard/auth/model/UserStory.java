@@ -31,9 +31,9 @@ public class UserStory {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    // FIXED: removed @JsonBackReference so sprint is visible in JSON
     @ManyToOne
     @JoinColumn(name = "sprint_id")
-    @JsonBackReference("story-sprint")
     private Sprint sprint;
 
     @ManyToOne
